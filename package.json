@@ -4,13 +4,13 @@
   "description": "SIGEXPC - Système de Gestion des Examens du Permis de Conduire (Côte d'Ivoire). Version moderne Node.js + Express + SQLite.",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node --experimental-sqlite server.js",
     "dev": "node --watch server.js",
     "init-db": "node src/config/init-db.js",
     "seed": "node src/config/seed.js",
     "migrate": "node src/config/migrate-from-xlsx.js",
     "fix-data": "node src/config/fix-data.js",
-    "render-build": "node src/config/render-init.js"
+    "render-build": "node --experimental-sqlite src/config/render-init.js"
   },
   "engines": {
     "node": ">=22.0.0"
