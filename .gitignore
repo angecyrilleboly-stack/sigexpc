@@ -1,0 +1,19 @@
+node_modules/
+.env
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# Base de données (créée/recréée sur le serveur de déploiement)
+data/
+
+# Fichiers temporaires et de test
+*_t.json
+*_admin.json
+*_ca.txt
+*_cookie.txt
+*_resp*.txt
+*_abo.json
+*_check.js
+*_block.json

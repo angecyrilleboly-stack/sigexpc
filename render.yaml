@@ -1,0 +1,48 @@
+# Configuration Render pour SIGEXPC
+# Docs : https://render.com/docs/blueprint-spec
+# Ce fichier permet à Render de créer automatiquement le service web.
+
+services:
+  - type: web
+    name: sigexpc
+    runtime: node
+    # Node.js >= 22 requis pour le module natif node:sqlite
+    plan: free
+    region: frankfurt  # Europe (le plus proche de la Côte d'Ivoire)
+    buildCommand: npm install && npm run render-build
+    startCommand: node server.js
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 22.14.0
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      # Super admin par défaut (modifiable après déploiement)
+      - key: ADMIN_EMAIL
+        value: admin@sigexpc.ci
+      - key: ADMIN_PASSWORD
+        value: ADMIN123
+      # Abonnement
+      - key: ABO_MONTANT
+        value: 300
+      - key: ABO_DUREE_JOURS
+        value: 30
+      # Email (SMTP) - À configurer avec tes identifiants
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_SECURE
+        value: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      # Clés API GeniusPay (déjà présentes dans le code, mais on peut surcharger ici)
+      - key: GENIUSPAY_API_KEY
+        sync: false
+      - key: GENIUSPAY_API_SECRET
+        sync: false

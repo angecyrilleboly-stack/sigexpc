@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIGEXPC - Portail des Examens du Permis de Conduire</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚦</text></svg>">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- ============================ MODALE GLOBALE ============================ -->
+  <div id="modal" class="modal-overlay">
+    <div class="modal-box" id="modalBox">
+      <div class="modal-header"><h3 id="modalTitle"></h3></div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+
+  <!-- ============================ TOASTS ============================ -->
+  <div id="toastContainer"></div>
+
+  <!-- ============================ ÉCRAN DE CONNEXION (design original SIGEXPC) ============================ -->
+  <div id="loginView" class="login-screen">
+    <div class="login-card">
+
+    <img src="/img/logo.png" alt="SIGEXPC Logo" style="width: 250px; height: auto; margin-bottom: 15px; border-radius: 15px; box-shadow: 0 10px 15px rgba(0,0,0,0.1);">
+
+  <div id="roleContainer">
+    <select id="lRole" style="border: 2px solid var(--blue); font-weight: bold; color: var(--blue); background: rgba(59, 130, 246, 0.05);">
+      <option value="REGION">Direction Régionale</option>
+      <option value="AUTO_ECOLE">Auto-École</option>
+      <option value="AGENT">Agent Vérificateur</option>
+      <option value="STTC">Service STTC</option>
+      <option value="SUPER_ADMIN">Super Admin</option>
+    </select>
+  </div>
+
+      <input id="lEmail" type="email" placeholder="Email professionnel">
+      <input id="lPass" type="password" placeholder="Code secret d'accès">
+
+      <button class="btn-main" id="btnLogin" style="margin-top: 15px; font-size: 1.1rem;"><i class="fas fa-key"></i> DÉMARRER LA SESSION</button>
+
+      <div id="loginError" class="error-sign"></div>
+
+      <div style="margin-top: 18px; font-size: 0.82rem; color: #94a3b8; line-height: 1.5;">
+        <i class="fas fa-car" style="color: var(--blue);"></i> Auto-école ?
+        <a href="/autoecole" style="color: var(--blue); font-weight: 600; text-decoration: none;">Accédez à l'espace dédié</a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================ ÉCRAN DE PAIEMENT (AE bloquée) - GeniusPay ============================ -->
+  <div id="paymentView" class="login-screen" style="display:none;">
+    <div class="login-card" style="max-width:420px; border-color:#dc2626 !important;">
+      <img src="/img/logo.png" alt="SIGEXPC Logo" style="width: 200px; height: auto; margin-bottom: 15px; border-radius: 15px; box-shadow: 0 10px 15px rgba(0,0,0,0.1);">
+      <div style="font-size: 4rem; color: #dc2626; margin-bottom: 10px;"><i class="fas fa-credit-card"></i></div>
+      <h2 style="margin: 0; text-transform: uppercase; font-weight: 700; color: #dc2626;">Paiement de l'Abonnement</h2>
+      <p style="color: #475569; font-size: 1rem; margin: 10px 0 20px; line-height: 1.6;">
+        Votre abonnement à <strong>SIGEXPC</strong> est arrivé à expiration.<br>
+        Veuillez procéder au paiement pour réactiver votre accès.
+      </p>
+      <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 25px; text-align: left;">
+        <div style="margin-bottom: 12px;">
+          <span style="display: block; color: #64748b; font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Auto-École</span>
+          <span id="payAEName" style="font-size: 1.4rem; font-weight: 700; color: #1e3a8a;">Chargement...</span>
+        </div>
+        <div>
+          <span style="display: block; color: #64748b; font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Tarif Mensuel</span>
+          <span id="payMontant" style="font-size: 2.5rem; font-weight: 900; color: #0f172a;">— FCFA</span>
+        </div>
+      </div>
+      <button class="btn-main" id="btnPayNow" onclick="redirectToGeniusPay()" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; border: none; padding: 18px; border-radius: 12px; font-weight: 700; font-size: 1.2rem; cursor: pointer; box-shadow: 0 8px 20px rgba(30, 58, 138, 0.4); transition: transform 0.2s;">
+        <i class="fas fa-credit-card"></i> PAYER MAINTENANT
+      </button>
+      <button onclick="backToLogin()" style="background: #e2e8f0; color: #1e293b; border: 1px solid #cbd5e1; padding: 14px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 12px; font-family: inherit; font-size: 0.95rem;">
+        <i class="fas fa-undo"></i> Retour à la connexion
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================ OVERLAY SIDEBAR ============================ -->
+  <div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+  <!-- ============================ SIDEBAR ============================ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="/img/logo.png" alt="SIGEXPC" class="sidebar-logo-img">
+      <h3>SIGEXPC</h3>
+      <div class="role-badge" id="sidebarRole">—</div>
+    </div>
+    <div id="menuItems"></div>
+    <div class="nav-link logout" onclick="logout()"><i class="fas fa-power-off"></i> Déconnexion</div>
+  </aside>
+
+  <!-- ============================ MAIN ============================ -->
+  <main class="main" id="main">
+    <header class="top-header">
+      <div class="header-left">
+        <button class="icon-btn" id="mobileMenuBtn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+        <h2 id="pageTitle">Tableau de bord</h2>
+      </div>
+      <div class="user-profile-header">
+        <button class="icon-btn" onclick="toggleDarkMode()" title="Mode sombre/clair"><i id="themeIcon" class="fas fa-moon"></i></button>
+        <div class="user-details">
+          <div class="name" id="userName">—</div>
+          <div class="role" id="userRoleLabel">—</div>
+        </div>
+        <div class="avatar"><i class="fas fa-user-tie"></i></div>
+      </div>
+    </header>
+    <div id="content" class="content-area"></div>
+  </main>
+
+  <!-- CSS + Scripts JS (avec cache-buster pour forcer le rechargement) -->
+  <link rel="stylesheet" href="/css/styles.css?v=20260725x">
+  <script src="/js/api.js?v=20260725x"></script>
+  <script src="/js/ui.js?v=20260725x"></script>
+  <script src="/js/views.js?v=20260725x"></script>
+  <script src="/js/views-candidats.js?v=20260725x"></script>
+  <script src="/js/views-stats.js?v=20260725x"></script>
+  <script src="/js/app.js?v=20260725x"></script>
+</body>
+</html>
