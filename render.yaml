@@ -6,23 +6,25 @@ services:
   - type: web
     name: sigexpc
     runtime: node
-    # Node.js >= 22 requis pour le module natif node:sqlite
     plan: free
     region: frankfurt  # Europe (le plus proche de la Côte d'Ivoire)
-    buildCommand: npm install && npm run render-build
-    startCommand: node --experimental-sqlite server.js
+    buildCommand: npm install
+    startCommand: node server.js
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
       - key: NODE_VERSION
         value: 22.14.0
-      - key: NODE_OPTIONS
-        value: --experimental-sqlite
       - key: NODE_ENV
         value: production
       - key: SESSION_SECRET
         generateValue: true
-      # Super admin par défaut (modifiable après déploiement)
+      # Base de données Supabase PostgreSQL (À CONFIGURER DANS RENDER)
+      - key: DATABASE_URL
+        sync: false
+      - key: DB_SSL
+        value: "true"
+      # Super admin par défaut
       - key: ADMIN_EMAIL
         value: admin@sigexpc.ci
       - key: ADMIN_PASSWORD
@@ -32,18 +34,18 @@ services:
         value: 300
       - key: ABO_DUREE_JOURS
         value: 30
-      # Email (SMTP) - À configurer avec tes identifiants
+      # Email (SMTP) - À configurer
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT
         value: 587
       - key: SMTP_SECURE
-        value: false
+        value: "false"
       - key: SMTP_USER
         sync: false
       - key: SMTP_PASS
         sync: false
-      # Clés API GeniusPay (déjà présentes dans le code, mais on peut surcharger ici)
+      # Clés API GeniusPay - À configurer dans Render
       - key: GENIUSPAY_API_KEY
         sync: false
       - key: GENIUSPAY_API_SECRET

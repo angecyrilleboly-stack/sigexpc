@@ -9,10 +9,14 @@ const path = require('path');
 const morgan = require('morgan');
 require('dotenv').config();
 
-// Auto-initialisation de la base SQLite au démarrage (garantit que les tables existent)
-// Sur Render, le système de fichiers peut être réinitialisé, donc on vérifie toujours.
+// Auto-initialisation de la base au démarrage (garantit que les tables existent)
+// PostgreSQL (Supabase) en production, SQLite en local
 try {
-  require('./src/config/render-init.js');
+  if (process.env.DATABASE_URL) {
+    require('./src/config/supabase-init.js');
+  } else {
+    require('./src/config/render-init.js');
+  }
 } catch (e) {
   console.error('⚠️ Erreur initialisation DB au démarrage:', e.message);
 }

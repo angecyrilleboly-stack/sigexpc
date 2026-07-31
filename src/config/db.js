@@ -1,15 +1,19 @@
 // ============================================================================
 //  SIGEXPC - Sélection automatique du moteur de base de données
-//  - Par défaut : SQLite (node:sqlite natif Node.js 24, AUCUNE installation)
-//  - Si DB_USE_MYSQL=true dans .env ET mysql2 connectable : MySQL
+//  Priorité :
+//    1. PostgreSQL/Supabase si DATABASE_URL est défini (PRODUCTION)
+//    2. MySQL si DB_USE_MYSQL=true
+//    3. SQLite par défaut (DÉVELOPPEMENT LOCAL)
 //  L'objet exporté expose l'interface commune : query, getConnection, end
 // ============================================================================
 require('dotenv').config();
 
-const useMysql = (process.env.DB_USE_MYSQL === 'true');
-
-if (useMysql) {
-  // Mode MySQL (nécessite un serveur MySQL installé et démarré)
+// 1. PostgreSQL / Supabase (production sur Render)
+if (process.env.DATABASE_URL) {
+  module.exports = require('./db-supabase');
+}
+// 2. MySQL (si demandé explicitement)
+else if (process.env.DB_USE_MYSQL === 'true') {
   try {
     const mysql = require('mysql2/promise');
     const pool = mysql.createPool({
@@ -30,8 +34,8 @@ if (useMysql) {
     console.warn('⚠️  MySQL demandé mais indisponible, fallback SQLite :', e.message);
     module.exports = require('./db-sqlite');
   }
-} else {
-  // Mode SQLite par défaut (aucune installation requise)
-  console.log('📦 Base de données : SQLite (fichier data/sigexpc.db)');
+}
+// 3. SQLite par défaut (développement local)
+else {
   module.exports = require('./db-sqlite');
 }

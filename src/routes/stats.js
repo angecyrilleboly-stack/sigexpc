@@ -266,8 +266,12 @@ router.post('/responsables', requireAuth, requireRole('REGION'), async (req, res
     const { chefSttc, coordonnateur, directeurRegional } = req.body;
     const idRegion = req.session.user.idRegion;
     await pool.query(
-      `INSERT OR REPLACE INTO parametres_region (id_region, chef_sttc, coordonnateur, directeur_regional)
-       VALUES (?, ?, ?, ?)`,
+      `INSERT INTO parametres_region (id_region, chef_sttc, coordonnateur, directeur_regional)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT (id_region) DO UPDATE SET
+         chef_sttc = EXCLUDED.chef_sttc,
+         coordonnateur = EXCLUDED.coordonnateur,
+         directeur_regional = EXCLUDED.directeur_regional`,
       [idRegion, chefSttc, coordonnateur, directeurRegional]
     );
     res.json({ success: true });
