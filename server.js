@@ -86,6 +86,29 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'SIGEXPC API opérationnelle', time: new Date().toISOString() });
 });
 
+// Route debug temporaire
+app.get('/api/debug', async (req, res) => {
+  const pool = require('./src/config/db');
+  const diag = {};
+  try {
+    const [c] = await pool.query('SELECT COUNT(*) as cnt FROM candidats');
+    diag.candidats = c[0]?.cnt;
+  } catch(e) { diag.candidatsErr = e.message; }
+  try {
+    const [a] = await pool.query('SELECT COUNT(*) as cnt FROM super_admins');
+    diag.admins = a[0]?.cnt;
+  } catch(e) { diag.adminsErr = e.message; }
+  try {
+    const [u] = await pool.query("SELECT id, email_admin, statut FROM auto_ecoles LIMIT 3");
+    diag.ae = u;
+  } catch(e) { diag.aeErr = e.message; }
+  try {
+    const [s] = await pool.query("SELECT email, code_acces FROM super_admins LIMIT 1");
+    diag.adminInfo = s[0] ? { email: s[0].email, passLen: String(s[0].code_acces).length, isHash: String(s[0].code_acces).startsWith('$2') } : null;
+  } catch(e) { diag.adminInfoErr = e.message; }
+  res.json(diag);
+});
+
 // ----------------------------------------------------------------------------
 // Page de connexion dédiée aux auto-écoles
 // ----------------------------------------------------------------------------
