@@ -9,17 +9,9 @@ const path = require('path');
 const morgan = require('morgan');
 require('dotenv').config();
 
-// Auto-initialisation de la base au démarrage (garantit que les tables existent)
-// PostgreSQL (Supabase) en production, SQLite en local
-try {
-  if (process.env.DATABASE_URL) {
-    require('./src/config/supabase-init.js');
-  } else {
-    require('./src/config/render-init.js');
-  }
-} catch (e) {
-  console.error('⚠️ Erreur initialisation DB au démarrage:', e.message);
-}
+// Note : L'initialisation de la base (création tables + import données)
+// se fait pendant le BUILD (npm run render-build) et non au démarrage.
+// Au démarrage, la base est déjà prête.
 
 const authRoutes = require('./src/routes/auth');
 const entityRoutes = require('./src/routes/entities');
