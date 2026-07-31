@@ -10,7 +10,7 @@
     "seed": "node src/config/seed.js",
     "migrate": "node src/config/migrate-from-xlsx.js",
     "fix-data": "node src/config/fix-data.js",
-    "render-build": "node --experimental-sqlite src/config/render-init.js"
+    "render-build": "echo build ok"
   },
   "engines": {
     "node": ">=22.0.0"

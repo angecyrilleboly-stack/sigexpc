@@ -9,9 +9,13 @@ const path = require('path');
 const morgan = require('morgan');
 require('dotenv').config();
 
-// Note : L'initialisation de la base (création tables + import données)
-// se fait pendant le BUILD (npm run render-build) et non au démarrage.
-// Au démarrage, la base est déjà prête.
+// Auto-initialisation de la base SQLite au démarrage (Render free = pas de disque persistant)
+// L'import des données se fait en une seule transaction pour être rapide.
+try {
+  require('./src/config/render-init.js');
+} catch (e) {
+  console.error('⚠️ Erreur initialisation DB:', e.message);
+}
 
 const authRoutes = require('./src/routes/auth');
 const entityRoutes = require('./src/routes/entities');

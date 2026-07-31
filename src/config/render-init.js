@@ -51,20 +51,19 @@ if (existingData && Number(existingData.cnt) > 0) {
     console.log('📥 Import des données réelles depuis seed-data.sql...');
     try {
       const seedSql = fs.readFileSync(seedFile, 'utf8');
+      // Désactiver les FK temporairement + transaction pour la vitesse
       db.exec('PRAGMA foreign_keys = OFF;');
-      // Exécuter instruction par instruction pour éviter les erreurs de parsing
-      const statements = seedSql.split('\n').filter(l => l.startsWith('INSERT INTO'));
-      let imported = 0;
-      for (const stmt of statements) {
-        try { db.exec(stmt); imported++; } catch (e) { /* ignore les doublons */ }
-      }
+      db.exec('BEGIN TRANSACTION;');
+      // Exécuter TOUT le SQL d'un coup (SQLite gère les multiples INSERT)
+      db.exec(seedSql);
+      db.exec('COMMIT;');
       db.exec('PRAGMA foreign_keys = ON;');
-      console.log(`✅ ${imported} lignes importées.`);
       // Compter les candidats pour confirmer
       const cnt = db.prepare('SELECT COUNT(*) as cnt FROM candidats').get();
-      console.log(`   ${cnt.cnt} candidats dans la base.`);
+      console.log(`✅ Import terminé. ${cnt.cnt} candidats dans la base.`);
     } catch (e) {
       console.error('⚠️ Erreur import seed:', e.message);
+      try { db.exec('ROLLBACK;'); } catch(_) {}
       // Fallback : créer un super admin par défaut
       creerDonneesDefaut(db);
     }
