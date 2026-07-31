@@ -90,37 +90,6 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'SIGEXPC API opérationnelle', time: new Date().toISOString() });
 });
 
-// Route DEBUG temporaire (à supprimer après diagnostic)
-app.get('/api/debug', async (req, res) => {
-  const pool = require('./src/config/db');
-  const diag = { time: new Date().toISOString(), checks: {} };
-  diag.env = {
-    DATABASE_URL: process.env.DATABASE_URL ? 'SET (' + process.env.DATABASE_URL.substring(0, 20) + '...)' : 'NOT SET',
-    DB_USE_MYSQL: process.env.DB_USE_MYSQL || 'NOT SET',
-    NODE_ENV: process.env.NODE_ENV || 'NOT SET'
-  };
-  try {
-    const [tables] = await pool.query("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name");
-    diag.checks.tables = tables.map(t => t.name);
-    diag.checks.tableCount = tables.length;
-  } catch (e) {
-    diag.checks.tablesError = e.message;
-  }
-  try {
-    const [admins] = await pool.query('SELECT COUNT(*) as cnt FROM super_admins');
-    diag.checks.adminCount = admins[0]?.cnt || 0;
-  } catch (e) {
-    diag.checks.adminError = e.message;
-  }
-  try {
-    const [abos] = await pool.query('SELECT COUNT(*) as cnt FROM parametres_abonnement');
-    diag.checks.aboCount = abos[0]?.cnt || 0;
-  } catch (e) {
-    diag.checks.aboError = e.message;
-  }
-  res.json(diag);
-});
-
 // ----------------------------------------------------------------------------
 // Page de connexion dédiée aux auto-écoles
 // ----------------------------------------------------------------------------
