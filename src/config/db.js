@@ -1,15 +1,16 @@
 // ============================================================================
 //  SIGEXPC - Sélection automatique du moteur de base de données
 //  Priorité :
-//    1. PostgreSQL/Supabase si DATABASE_URL est défini (PRODUCTION)
+//    1. PostgreSQL si DATABASE_URL est défini ET fonctionnel (PRODUCTION)
 //    2. MySQL si DB_USE_MYSQL=true
-//    3. SQLite par défaut (DÉVELOPPEMENT LOCAL)
+//    3. SQLite par défaut (DÉVELOPPEMENT LOCAL + Render sans PG)
 //  L'objet exporté expose l'interface commune : query, getConnection, end
 // ============================================================================
 require('dotenv').config();
 
-// 1. PostgreSQL / Supabase (production sur Render)
-if (process.env.DATABASE_URL) {
+// 1. PostgreSQL / Supabase (production sur Render) — uniquement si DATABASE_URL valide
+//    On teste si DATABASE_URL commence par postgresql:// ET n'est pas vide
+if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgresql://') && process.env.DATABASE_URL.length > 30) {
   module.exports = require('./db-supabase');
 }
 // 2. MySQL (si demandé explicitement)
