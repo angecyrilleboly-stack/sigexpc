@@ -34,17 +34,48 @@ try {
   console.error('❌ Erreur schéma:', err.message);
 }
 
-// 2. Vérifier s'il y a déjà un super admin
-let existingAdmins;
+// 2. Vérifier s'il y a déjà des données (compter candidats = grosse table)
+let existingData;
 try {
-  existingAdmins = db.prepare('SELECT COUNT(*) as cnt FROM super_admins').get();
+  existingData = db.prepare('SELECT COUNT(*) as cnt FROM candidats').get();
 } catch (e) {
-  existingAdmins = { cnt: 0 };
+  existingData = { cnt: 0 };
 }
 
-if (existingAdmins && Number(existingAdmins.cnt) > 0) {
-  console.log('ℹ️  La base contient déjà des données. OK.');
+if (existingData && Number(existingData.cnt) > 0) {
+  console.log(`ℹ️  La base contient déjà ${existingData.cnt} candidats. OK.`);
 } else {
+  // 3. Importer les vraies données depuis seed-data.sql si disponible
+  const seedFile = path.join(__dirname, 'seed-data.sql');
+  if (fs.existsSync(seedFile)) {
+    console.log('📥 Import des données réelles depuis seed-data.sql...');
+    try {
+      const seedSql = fs.readFileSync(seedFile, 'utf8');
+      db.exec('PRAGMA foreign_keys = OFF;');
+      // Exécuter instruction par instruction pour éviter les erreurs de parsing
+      const statements = seedSql.split('\n').filter(l => l.startsWith('INSERT INTO'));
+      let imported = 0;
+      for (const stmt of statements) {
+        try { db.exec(stmt); imported++; } catch (e) { /* ignore les doublons */ }
+      }
+      db.exec('PRAGMA foreign_keys = ON;');
+      console.log(`✅ ${imported} lignes importées.`);
+      // Compter les candidats pour confirmer
+      const cnt = db.prepare('SELECT COUNT(*) as cnt FROM candidats').get();
+      console.log(`   ${cnt.cnt} candidats dans la base.`);
+    } catch (e) {
+      console.error('⚠️ Erreur import seed:', e.message);
+      // Fallback : créer un super admin par défaut
+      creerDonneesDefaut(db);
+    }
+  } else {
+    console.log('ℹ️  Pas de seed-data.sql. Création de données par défaut...');
+    creerDonneesDefaut(db);
+  }
+}
+
+// Fonction : créer un super admin + données minimales par défaut
+function creerDonneesDefaut(db) {
   // 3. Créer un super admin par défaut
   const adminEmail = process.env.ADMIN_EMAIL || 'admin@sigexpc.ci';
   const adminPass = process.env.ADMIN_PASSWORD || 'ADMIN123';
