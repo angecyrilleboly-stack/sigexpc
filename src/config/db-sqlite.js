@@ -12,7 +12,14 @@ const DB_FILE = path.join(__dirname, '..', '..', 'data', 'sigexpc.db');
 fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
 
 const db = new DatabaseSync(DB_FILE);
-db.exec('PRAGMA journal_mode = WAL;');
+// Mode journal : WAL en local, DELETE en production (plus compatible avec les FS cloud)
+try {
+  if (process.env.NODE_ENV === 'production') {
+    db.exec('PRAGMA journal_mode = DELETE;');
+  } else {
+    db.exec('PRAGMA journal_mode = WAL;');
+  }
+} catch (e) { /* ignore si le mode ne peut pas être changé */ }
 db.exec('PRAGMA foreign_keys = ON;');
 
 // ----------------------------------------------------------------------------

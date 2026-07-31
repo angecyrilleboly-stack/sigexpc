@@ -77,7 +77,11 @@ try {
 // 6. Lister les tables
 const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name").all();
 console.log(`\n📊 ${tables.length} tables prêtes.`);
-db.close();
+// ATTENTION : ne pas fermer la DB si on est chargé depuis server.js (require),
+// car db-sqlite.js gère sa propre connexion. On ne ferme que si exécuté en standalone.
+if (require.main === module) {
+  db.close();
+}
 
 console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 console.log('  Base initialisée avec succès !');
