@@ -9,6 +9,14 @@ const path = require('path');
 const morgan = require('morgan');
 require('dotenv').config();
 
+// Auto-initialisation de la base SQLite au démarrage (garantit que les tables existent)
+// Sur Render, le système de fichiers peut être réinitialisé, donc on vérifie toujours.
+try {
+  require('./src/config/render-init.js');
+} catch (e) {
+  console.error('⚠️ Erreur initialisation DB au démarrage:', e.message);
+}
+
 const authRoutes = require('./src/routes/auth');
 const entityRoutes = require('./src/routes/entities');
 const candidatRoutes = require('./src/routes/candidats');
