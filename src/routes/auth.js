@@ -48,6 +48,7 @@ async function checkPass(input, stored) {
 router.post('/login', async (req, res) => {
   try {
     const { email, motDePasse, role } = req.body;
+    console.log('LOGIN DEBUG:', { email, role, hasPass: !!motDePasse });
     if (!email || !motDePasse || !role) {
       return res.status(400).json({ success: false, error: 'Email, mot de passe et rôle sont obligatoires.' });
     }
