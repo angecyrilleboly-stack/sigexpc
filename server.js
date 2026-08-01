@@ -122,16 +122,6 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'SIGEXPC API opérationnelle', time: new Date().toISOString() });
 });
 
-// Route diagnostic DB
-app.get('/api/db-test', async (req, res) => {
-  try {
-    const [rows] = await pool.query('SELECT COUNT(*) as cnt FROM candidats');
-    res.json({ ok: true, candidats: rows[0].cnt });
-  } catch (e) {
-    res.json({ ok: false, error: e.message, stack: e.stack?.substring(0, 300) });
-  }
-});
-
 // ----------------------------------------------------------------------------
 // Page de connexion dédiée aux auto-écoles
 // ----------------------------------------------------------------------------
