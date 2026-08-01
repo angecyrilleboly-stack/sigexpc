@@ -52,6 +52,8 @@ if (existingData && Number(existingData.cnt) > 0) {
     try {
       const seedSql = fs.readFileSync(seedFile, 'utf8');
       db.exec('PRAGMA foreign_keys = OFF;');
+      db.exec('PRAGMA synchronous = OFF;'); // Vitesse maximale pour l'import
+      db.exec('BEGIN TRANSACTION;');
       // Importer instruction par instruction (ignorer les doublons UNIQUE)
       const statements = seedSql.split('\n').filter(l => l.trim().startsWith('INSERT INTO'));
       let imported = 0, skipped = 0;
@@ -63,11 +65,13 @@ if (existingData && Number(existingData.cnt) > 0) {
           skipped++; // doublon ou contrainte, on ignore
         }
       }
+      db.exec('COMMIT;');
       db.exec('PRAGMA foreign_keys = ON;');
       const cnt = db.prepare('SELECT COUNT(*) as cnt FROM candidats').get();
       console.log(`✅ ${imported} importés, ${skipped} ignorés. ${cnt.cnt} candidats.`);
     } catch (e) {
       console.error('⚠️ Erreur import seed:', e.message);
+      try { db.exec('ROLLBACK;'); } catch(_) {}
       creerDonneesDefaut(db);
     }
   } else {
