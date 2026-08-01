@@ -9,12 +9,48 @@ const path = require('path');
 const morgan = require('morgan');
 require('dotenv').config();
 
-// Auto-initialisation de la base SQLite au démarrage (Render free = pas de disque persistant)
-// L'import des données se fait en une seule transaction pour être rapide.
-try {
-  require('./src/config/render-init.js');
-} catch (e) {
-  console.error('⚠️ Erreur initialisation DB:', e.message);
+// Auto-initialisation de la base SQLite au démarrage via le MÊME module db-sqlite.js
+// que les routes, pour éviter les conflits de connexion.
+const pool = require('./src/config/db');
+async function initDBIfNeeded() {
+  try {
+    const [rows] = await pool.query("SELECT name FROM sqlite_master WHERE type='table' AND name='candidats'");
+    if (rows.length === 0) {
+      console.log('📦 Tables manquantes, création...');
+      const fs = require('fs');
+      const path = require('path');
+      const schema = fs.readFileSync(path.join(__dirname, 'src/config/schema-sqlite.sql'), 'utf8');
+      // Exécuter le schéma (le wrapper gère la conversion)
+      const { DatabaseSync } = require('node:sqlite');
+      const dbPath = path.join(__dirname, 'data', 'sigexpc.db');
+      const directDb = new DatabaseSync(dbPath);
+      directDb.exec(schema);
+      directDb.close();
+      console.log('✅ Tables créées.');
+    }
+    // Vérifier s'il y a des données
+    const [cnt] = await pool.query('SELECT COUNT(*) as c FROM candidats');
+    if (cnt[0].c === 0) {
+      console.log('📥 Base vide, import des données...');
+      const fs = require('fs');
+      const path = require('path');
+      const seedFile = path.join(__dirname, 'src/config/seed-data.sql');
+      if (fs.existsSync(seedFile)) {
+        const seedSql = fs.readFileSync(seedFile, 'utf8');
+        const statements = seedSql.split('\n').filter(l => l.trim().startsWith('INSERT INTO'));
+        let imported = 0, skipped = 0;
+        for (const stmt of statements) {
+          try { await pool.query(stmt); imported++; }
+          catch (e) { skipped++; }
+        }
+        console.log(`✅ ${imported} importés, ${skipped} ignorés.`);
+      }
+    } else {
+      console.log(`ℹ️  Base OK (${cnt[0].c} candidats).`);
+    }
+  } catch (e) {
+    console.error('⚠️ Erreur init DB:', e.message);
+  }
 }
 
 const authRoutes = require('./src/routes/auth');
@@ -111,15 +147,12 @@ app.use((err, req, res, next) => {
 // ----------------------------------------------------------------------------
 // Démarrage
 // ----------------------------------------------------------------------------
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log(`  🚦 SIGEXPC démarré sur http://localhost:${PORT}`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('  Première utilisation ?');
-  console.log('   1. npm run init-db   (crée la base MySQL)');
-  console.log('   2. npm run seed      (données de démonstration)');
-  console.log('   3. Ouvrez l\'URL ci-dessus');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  // Initialiser la base (création tables + import données) AVANT d'accepter les requêtes
+  await initDBIfNeeded();
   // Démarrer le job de rappel d'expiration d'abonnement (J-3)
   demarrerJobRappel();
 });
