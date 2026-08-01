@@ -13,6 +13,11 @@ require('dotenv').config();
 // que les routes, pour éviter les conflits de connexion.
 const pool = require('./src/config/db');
 async function initDBIfNeeded() {
+  // Si on utilise PostgreSQL (Supabase), la base est déjà initialisée via migration
+  if (process.env.DATABASE_URL) {
+    console.log('📦 PostgreSQL (Supabase) détecté - base déjà initialisée');
+    return;
+  }
   try {
     const [rows] = await pool.query("SELECT name FROM sqlite_master WHERE type='table' AND name='candidats'");
     if (rows.length === 0) {
