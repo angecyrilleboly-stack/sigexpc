@@ -8,9 +8,11 @@
 // ============================================================================
 require('dotenv').config();
 
-// 1. PostgreSQL / Supabase (production sur Render) — uniquement si DATABASE_URL valide
-//    On teste si DATABASE_URL commence par postgresql:// ET n'est pas vide
-if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgresql://') && process.env.DATABASE_URL.length > 30) {
+// 1. PostgreSQL / Supabase (production sur Render)
+//    Détecté si DATABASE_URL OU si DB_HOST pointe vers Supabase (pas localhost)
+const isSupabase = (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgresql://') && process.env.DATABASE_URL.length > 30)
+  || (process.env.DB_HOST && process.env.DB_HOST.includes('supabase'));
+if (isSupabase) {
   module.exports = require('./db-supabase');
 }
 // 2. MySQL (si demandé explicitement)

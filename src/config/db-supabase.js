@@ -8,16 +8,44 @@
 const { Pool } = require('pg');
 
 // Construire la config depuis DATABASE_URL ou variables séparées
+// Priorité aux variables séparées si DB_HOST est défini (évite les problèmes d'encodage @)
 let poolConfig;
-if (process.env.DATABASE_URL) {
-  // Format : postgresql://postgres.xxxx:password@host:5432/postgres
+if (process.env.DB_HOST && process.env.DB_HOST.includes('supabase')) {
+  // Variables séparées (recommandé pour les mots de passe avec caractères spéciaux)
   poolConfig = {
-    connectionString: process.env.DATABASE_URL,
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT) || 5432,
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'postgres',
     ssl: process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false },
-    max: 10, // nombre max de connexions
+    max: 10,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 5000,
   };
+} else if (process.env.DATABASE_URL) {
+  try {
+    const url = new URL(process.env.DATABASE_URL);
+    poolConfig = {
+      host: url.hostname,
+      port: parseInt(url.port) || 5432,
+      user: decodeURIComponent(url.username),
+      password: decodeURIComponent(url.password),
+      database: url.pathname.replace('/', ''),
+      ssl: process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false },
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
+    };
+  } catch (e) {
+    poolConfig = {
+      connectionString: process.env.DATABASE_URL,
+      ssl: process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false },
+      max: 10,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 5000,
+    };
+  }
 } else {
   // Variables séparées (fallback)
   poolConfig = {
