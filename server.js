@@ -14,7 +14,9 @@ require('dotenv').config();
 const pool = require('./src/config/db');
 async function initDBIfNeeded() {
   // Si on utilise PostgreSQL (Supabase), la base est déjà initialisée via migration
-  if (process.env.DATABASE_URL) {
+  const isPg = (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgresql://'))
+    || (process.env.DB_HOST && process.env.DB_HOST.includes('supabase'));
+  if (isPg) {
     console.log('📦 PostgreSQL (Supabase) détecté - base déjà initialisée');
     return;
   }
@@ -125,16 +127,6 @@ app.use('/api/documents', documentRoutes);
 // Route santé
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'SIGEXPC API opérationnelle', time: new Date().toISOString() });
-});
-
-// Route test DB temporaire
-app.get('/api/db-test', async (req, res) => {
-  try {
-    const [rows] = await pool.query('SELECT COUNT(*) as cnt FROM candidats');
-    res.json({ ok: true, candidats: rows[0].cnt });
-  } catch (e) {
-    res.json({ ok: false, error: e.message });
-  }
 });
 
 // ----------------------------------------------------------------------------
