@@ -32,12 +32,13 @@ async function checkAboAE(idAE) {
     blocked = !(abos[0].statut === 'actif' && fin > nowDt);
   }
 
-  // Auto-marquer l'AE comme 'inactif' (abonnement expiré) en DB si expirée.
-  // IMPORTANT : on utilise 'inactif' (expiration automatique) et NON 'bloque'
-  // qui est réservé au blocage MANUEL par le super admin.
+  // Auto-marquer l'AE comme 'bloque' en DB si son abonnement a expiré.
+  // Une AE bloquée ne peut être réactivée QUE par :
+  //   1. Le super admin (bouton Réactiver dans le panel Abonnements)
+  //   2. Le paiement d'un nouvel abonnement (GeniusPay)
   if (blocked && aes.length && aes[0].statut === 'actif') {
     try {
-      await pool.query("UPDATE auto_ecoles SET statut = 'inactif' WHERE id = ?", [idAE]);
+      await pool.query("UPDATE auto_ecoles SET statut = 'bloque' WHERE id = ?", [idAE]);
     } catch (e) { /* non bloquant */ }
   }
 

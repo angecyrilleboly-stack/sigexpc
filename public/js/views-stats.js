@@ -533,20 +533,16 @@ async function openAbonnements() {
 }
 
 function renderAbonnements() {
-  // Statistiques
+  // Statistiques — 2 statuts seulement : actif et bloque
   const total = _aboList.length;
-  const actifs = _aboList.filter(a => a.estActif).length;
-  const inactifs = _aboList.filter(a => a.statut === 'inactif').length;
+  const actifs = _aboList.filter(a => a.statut === 'actif').length;
   const bloques = _aboList.filter(a => a.statut === 'bloque').length;
-  const expires = inactifs + bloques;
-  const bientot = _aboList.filter(a => a.estActif && a.joursRestants <= 7).length;
+  const bientot = _aboList.filter(a => a.statut === 'actif' && a.joursRestants <= 7).length;
 
   let list = _aboList;
-  if (_aboFilter === 'actif') list = list.filter(a => a.estActif);
-  else if (_aboFilter === 'expire') list = list.filter(a => !a.estActif);
-  else if (_aboFilter === 'bientot') list = list.filter(a => a.estActif && a.joursRestants <= 7);
-  else if (_aboFilter === 'inactif') list = list.filter(a => a.statut === 'inactif');
+  if (_aboFilter === 'actif') list = list.filter(a => a.statut === 'actif');
   else if (_aboFilter === 'bloque') list = list.filter(a => a.statut === 'bloque');
+  else if (_aboFilter === 'bientot') list = list.filter(a => a.statut === 'actif' && a.joursRestants <= 7);
   if (_aboSearch) {
     const q = _aboSearch.toLowerCase();
     list = list.filter(a => String(a.nom).toLowerCase().includes(q) || String(a.email||'').toLowerCase().includes(q) || String(a.region).toLowerCase().includes(q));
@@ -557,23 +553,20 @@ function renderAbonnements() {
     <div class="stats-grid">
       ${statCard(total, 'Total', 'fa-school', '')}
       ${statCard(actifs, 'Actifs', 'fa-circle-check', 'green')}
-      ${statCard(inactifs, 'Expirés (auto)', 'fa-clock', 'yellow')}
       ${statCard(bientot, 'Expirent bientôt (<7j)', 'fa-hourglass-half', 'yellow')}
-      ${statCard(bloques, 'Bloqués (admin)', 'fa-ban', 'red')}
+      ${statCard(bloques, 'Bloqués', 'fa-ban', 'red')}
     </div>
     <div class="card">
       <div class="card-header">
         <div>
           <h3 style="margin:0;"><i class="fas fa-car" style="color:var(--blue);"></i> Liste des auto-écoles</h3>
-          <p class="text-muted" style="margin:4px 0 0;font-size:0.82rem;">Seules les auto-écoles figurent ici. Les directions régionales, agents et STTC ne sont pas soumis à l'abonnement.</p>
+          <p class="text-muted" style="margin:4px 0 0;font-size:0.82rem;">Seules les auto-écoles figurent ici. Une AE bloquée peut être réactivée par un paiement ou manuellement ci-dessous.</p>
         </div>
         <select onchange="_aboFilter=this.value;renderAbonnements()" style="max-width:220px;">
           <option value="ALL" ${_aboFilter==='ALL'?'selected':''}>Tous les statuts</option>
           <option value="actif" ${_aboFilter==='actif'?'selected':''}>Actifs</option>
-          <option value="expire" ${_aboFilter==='expire'?'selected':''}>Tous les expirés</option>
-          <option value="inactif" ${_aboFilter==='inactif'?'selected':''}>Expirés (auto)</option>
+          <option value="bloque" ${_aboFilter==='bloque'?'selected':''}>Bloqués</option>
           <option value="bientot" ${_aboFilter==='bientot'?'selected':''}>Expirent bientôt</option>
-          <option value="bloque" ${_aboFilter==='bloque'?'selected':''}>Bloqués (admin)</option>
         </select>
         <div class="search-bar"><i class="fas fa-search"></i><input placeholder="Rechercher..." value="${esc(_aboSearch)}" oninput="_aboSearch=this.value;renderAbonnements()"></div>
         <span class="text-muted" style="font-size:0.85rem;">${list.length} auto-école(s)</span>
@@ -586,15 +579,13 @@ function renderAbonnements() {
             <td><div style="display:flex;align-items:center;gap:8px;"><i class="fas fa-car" style="color:var(--blue);"></i><div><b>${esc(a.nom)}</b><br><span class="text-muted" style="font-size:0.78rem;">${esc(a.email || '')}</span></div></div></td>
             <td><span style="font-size:0.88rem;color:var(--gray);">${esc(a.region)}</span></td>
             <td>${statutBadge(a.statut)}</td>
-            <td>${a.estActif ? '<span class="badge badge-success"><i class="fas fa-check"></i> Actif</span>' : '<span class="badge badge-danger"><i class="fas fa-xmark"></i> Expiré</span>'}</td>
-            <td>${a.estActif ? `<b class="${a.joursRestants <= 7 ? 'text-danger' : 'text-success'}">${a.joursRestants} j</b>` : '<span class="text-muted">—</span>'}</td>
+            <td>${a.statut === 'actif' ? '<span class="badge badge-success"><i class="fas fa-check"></i> Actif</span>' : '<span class="badge badge-danger"><i class="fas fa-xmark"></i> Expiré</span>'}</td>
+            <td>${a.statut === 'actif' ? `<b class="${a.joursRestants <= 7 ? 'text-danger' : 'text-success'}">${a.joursRestants} j</b>` : '<span class="text-muted">—</span>'}</td>
             <td>${esc(a.dateFin)}</td>
             <td>
               ${a.statut === 'actif'
                 ? `<button class="btn btn-sm btn-danger" onclick="toggleAbo('${a.id}','bloque','${esc(a.nom)}')"><i class="fas fa-ban"></i> Bloquer</button>`
-                : a.statut === 'bloque'
-                  ? `<button class="btn btn-sm btn-success" onclick="toggleAbo('${a.id}','actif','${esc(a.nom)}')"><i class="fas fa-check"></i> Réactiver</button>`
-                  : `<span class="badge badge-warning" title="L\\'auto-école doit payer pour réactiver"><i class="fas fa-clock"></i> En attente de paiement</span>`}
+                : `<button class="btn btn-sm btn-success" onclick="toggleAbo('${a.id}','actif','${esc(a.nom)}')"><i class="fas fa-check"></i> Réactiver</button>`}
             </td>
           </tr>`).join('')}
         </tbody>

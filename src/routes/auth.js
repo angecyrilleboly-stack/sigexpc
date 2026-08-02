@@ -74,8 +74,9 @@ router.post('/login', async (req, res) => {
         if (!(await checkPass(motDePasse, s.code))) {
           return res.json({ success: false, msg: 'Identifiants incorrects.' });
         }
-        // AE bloquée par admin OU abonnement expiré (inactif)
-        if (s.ae_statut === 'bloque' || s.ae_statut === 'inactif') {
+        // AE bloquée : statut !== 'actif' (bloquée par admin OU abonnement expiré automatiquement)
+        // Réactivation possible uniquement par : super admin OU paiement GeniusPay
+        if (s.ae_statut !== 'actif') {
           try {
             const [p] = await pool.query('SELECT montant FROM parametres_abonnement ORDER BY id DESC LIMIT 1');
             const montant = Number(p[0]?.montant) || 200;
@@ -99,9 +100,10 @@ router.post('/login', async (req, res) => {
       return res.json({ success: false, msg: 'Identifiants incorrects.' });
     }
 
-    // AUTO_ECOLE bloquée ? (bloque = par admin, inactif = abonnement expiré)
-    // Récupérer le montant dynamique pour l'afficher
-    if (role === 'AUTO_ECOLE' && (row.statut === 'bloque' || row.statut === 'inactif')) {
+    // AUTO_ECOLE bloquée : statut !== 'actif'
+    // (bloquée par admin OU abonnement expiré automatiquement)
+    // Réactivation possible uniquement par : super admin OU paiement GeniusPay
+    if (role === 'AUTO_ECOLE' && row.statut !== 'actif') {
       try {
         const [p] = await pool.query('SELECT montant FROM parametres_abonnement ORDER BY id DESC LIMIT 1');
         const montant = Number(p[0]?.montant) || 200;
