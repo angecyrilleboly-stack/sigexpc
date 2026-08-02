@@ -120,7 +120,13 @@ router.post('/login', async (req, res) => {
       subRole: role === 'AUTO_ECOLE' ? 'GERANT' : null
     };
     req.session.user = user;
-    res.json({ success: true, user });
+    req.session.save((err) => {
+      if (err) {
+        console.error('Erreur save session:', err);
+        return res.status(500).json({ success: false, error: 'Erreur de session: ' + err.message });
+      }
+      res.json({ success: true, user });
+    });
   } catch (err) {
     console.error('Erreur login:', err);
     res.status(500).json({ success: false, error: 'Erreur serveur: ' + err.message });
