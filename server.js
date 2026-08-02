@@ -129,41 +129,6 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'SIGEXPC API opérationnelle', time: new Date().toISOString() });
 });
 
-// Route diagnostic
-app.get('/api/diag', async (req, res) => {
-  const diag = {};
-  try {
-    // Simuler le login complet
-    const bcrypt = require('bcryptjs');
-    const [rows] = await pool.query('SELECT * FROM super_admins WHERE LOWER(email) = ? LIMIT 1', ['admin@test.com']);
-    if (rows[0]) {
-      const row = rows[0];
-      diag.row = { email: row.email, code_acces: row.code_acces };
-      // checkPass
-      const stored = row.code_acces;
-      const input = 'ADMIN123';
-      diag.checkPass = {
-        stored: stored,
-        input: input,
-        isHash: String(stored).startsWith('$2'),
-        match: String(stored).startsWith('$2') ? 'bcrypt' : (input === String(stored) ? 'text-OK' : 'text-FAIL')
-      };
-      // Simuler la création de session
-      const user = {
-        id: row.id, nom: row.nom, role: 'SUPER_ADMIN', idRegion: '', isMain: false, subRole: null
-      };
-      diag.userCreated = user;
-      diag.result = 'success';
-    } else {
-      diag.result = 'not found';
-    }
-  } catch (e) {
-    diag.error = e.message;
-    diag.stack = e.stack?.substring(0, 500);
-  }
-  res.json(diag);
-});
-
 // ----------------------------------------------------------------------------
 // Page de connexion dédiée aux auto-écoles
 // ----------------------------------------------------------------------------
@@ -183,7 +148,7 @@ app.get('*', (req, res) => {
 // ----------------------------------------------------------------------------
 app.use((err, req, res, next) => {
   console.error('Erreur serveur:', err);
-  res.status(500).json({ success: false, error: 'Erreur interne: ' + err.message, stack: err.stack?.substring(0, 300) });
+  res.status(500).json({ success: false, error: 'Erreur interne du serveur.' });
 });
 
 // ----------------------------------------------------------------------------
