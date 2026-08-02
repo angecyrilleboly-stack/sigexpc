@@ -183,7 +183,7 @@ app.get('*', (req, res) => {
 // ----------------------------------------------------------------------------
 app.use((err, req, res, next) => {
   console.error('Erreur serveur:', err);
-  res.status(500).json({ success: false, error: 'Erreur interne du serveur.' });
+  res.status(500).json({ success: false, error: 'Erreur interne: ' + err.message, stack: err.stack?.substring(0, 300) });
 });
 
 // ----------------------------------------------------------------------------
