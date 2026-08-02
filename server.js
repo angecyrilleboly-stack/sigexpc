@@ -133,17 +133,14 @@ app.get('/api/health', (req, res) => {
 app.get('/api/diag', async (req, res) => {
   const diag = {
     DB_HOST: process.env.DB_HOST || 'NOT SET',
-    DB_USER: process.env.DB_USER || 'NOT SET',
-    DATABASE_URL: process.env.DATABASE_URL ? 'SET' : 'NOT SET',
     isSupabase: (process.env.DB_HOST && process.env.DB_HOST.includes('supabase'))
   };
   try {
-    const [rows] = await pool.query('SELECT COUNT(*) as c FROM super_admins');
-    diag.admins = rows[0].c;
-    const [c] = await pool.query('SELECT COUNT(*) as c FROM candidats');
-    diag.candidats = c[0].c;
+    // Test requête exacte du login
+    const [rows] = await pool.query('SELECT * FROM super_admins WHERE LOWER(email) = ? LIMIT 1', ['admin@test.com']);
+    diag.loginTest = rows.length > 0 ? { found: true, keys: Object.keys(rows[0]), email: rows[0].email, pass: String(rows[0].code_acces).substring(0, 10) } : { found: false };
   } catch (e) {
-    diag.dbError = e.message.substring(0, 200);
+    diag.loginError = e.message.substring(0, 300);
   }
   res.json(diag);
 });
