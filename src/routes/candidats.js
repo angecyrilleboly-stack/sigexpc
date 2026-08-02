@@ -444,11 +444,13 @@ router.post('/examens/:idExamen/import', requireAuth, requireRole('REGION'), asy
       await conn.beginTransaction();
       for (const c of candidats) {
         const newCandId = randId('CAN', 6);
-        const cleanCat = cleanCat(c.cat);
+        // Nettoyer la catégorie comme l'ancien code : retirer "Catégorie" et trimmer
+        let cat = String(c.cat || 'ABCDE').replace(/Catégorie/i, '').trim();
+        if (!cat) cat = 'ABCDE';
         await conn.query(
           `INSERT INTO candidats (id, id_autoecole, nom, prenoms, numero_piece, categorie_permis, telephone, date_inscription, statut_inscription)
            VALUES (?, ?, ?, '', ?, ?, '', datetime('now','localtime'), ?)`,
-          [newCandId, idAE, c.nomPrenoms, c.piece, cleanCat, `Validé (${examLabel})`]
+          [newCandId, idAE, c.nomPrenoms, c.piece, cat, `Validé (${examLabel})`]
         );
         const newInscId = randId('INS', 6);
         await conn.query(
