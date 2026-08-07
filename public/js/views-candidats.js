@@ -343,7 +343,7 @@ function renderSalle() {
       ${hasValidated ? `<button class="btn btn-sm btn-primary" onclick="validerDeliberationMasse()"><i class="fas fa-gavel"></i> Valider la délibération</button>` : ''}
       <button class="btn btn-sm btn-ghost" onclick="exportTable('salleTable','examen_${id}')"><i class="fas fa-file-excel"></i> Export</button>
       <button class="btn btn-sm btn-ghost" onclick="openDocument('/api/documents/delibere/${id}')"><i class="fas fa-file-pdf"></i> Bordereau délibéré</button>
-      <button class="btn btn-sm btn-ghost" onclick="openDeliberes()"><i class="fas fa-arrow-left"></i> Retour</button>
+      <button class="btn btn-sm btn-ghost" onclick="openExamens()"><i class="fas fa-arrow-left"></i> Retour</button>
     `)}
     <div class="card">
       <div class="card-header" style="flex-wrap:wrap;gap:10px;">
