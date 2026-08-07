@@ -67,6 +67,13 @@ async function getBordereauData(idExamen, idReg, isRajout) {
   const exam = exams[0];
   const regionNom = await getRegionNom(idReg);
 
+  // Récupérer le nom du directeur régional (signataire)
+  let directeurNom = '';
+  try {
+    const [pr] = await pool.query('SELECT directeur_regional FROM parametres_region WHERE id_region = ?', [idReg]);
+    if (pr.length && pr[0].directeur_regional) directeurNom = pr[0].directeur_regional;
+  } catch (e) {}
+
   const [rows] = await pool.query(
     `SELECT ins.resultat, ins.validation_region, c.nom, c.numero_piece, c.categorie_permis, ae.nom AS ae
      FROM inscriptions_examens ins
@@ -86,7 +93,9 @@ async function getBordereauData(idExamen, idReg, isRajout) {
   return {
     success: true,
     regionNom,
-    exam: { date: fmtDateFR(exam.date_examen), lieu: exam.lieu || 'À définir', type: exam.type_examen },
+    exam: { date: fmtDateFR(exam.date_examen), lieu: exam.lieu || 'À définir', type: exam.type_examen, inspecteur: exam.inspecteur_nom || '' },
+    inspecteurNom: exam.inspecteur_nom || '',
+    directeurNom,
     candidats
   };
 }
@@ -121,7 +130,7 @@ router.get('/bordereau/:idExamen', requireAuth, requireRole('REGION', 'SUPER_ADM
     data.candidats.forEach((c, i) => {
       body += `<tr><td style="text-align:center;">${i + 1}</td><td>${esc(c.nom)}</td><td style="font-family:monospace;font-weight:bold;">${esc(c.piece)}</td><td style="text-align:center;">${esc(c.cat)}</td><td>${esc(c.ae)}</td><td></td></tr>`;
     });
-    body += `</table><table class="footer-table"><tr><td>L'INSPECTEUR</td><td>LE DIRECTEUR REGIONAL</td></tr></table>`;
+    body += `</table><table class="footer-table"><tr><td style="width:50%;text-align:center;vertical-align:top;"><div style="margin-bottom:50px;"><b>L'INSPECTEUR</b></div><div style="font-weight:bold;text-decoration:underline;">${esc(data.inspecteurNom)}</div></td><td style="width:50%;text-align:center;vertical-align:top;"><div style="margin-bottom:50px;"><b>LE DIRECTEUR REGIONAL</b></div><div style="font-weight:bold;text-decoration:underline;">${esc(data.directeurNom)}</div></td></tr></table>`;
 
     res.send(wrapDoc(title, body, data.regionNom));
   } catch (e) { res.status(500).send('Erreur: ' + esc(e.message)); }
@@ -139,6 +148,14 @@ router.get('/delibere/:idExamen', requireAuth, async (req, res) => {
     if (!exams.length) return res.status(404).send('Examen introuvable.');
     const exam = exams[0];
     const regionNom = await getRegionNom(idReg);
+
+    // Récupérer le nom du directeur régional (signataire)
+    let directeurNom = '';
+    try {
+      const [pr] = await pool.query('SELECT directeur_regional FROM parametres_region WHERE id_region = ?', [idReg]);
+      if (pr.length && pr[0].directeur_regional) directeurNom = pr[0].directeur_regional;
+    } catch (e) {}
+    const inspecteurNom = exam.inspecteur_nom || '';
 
     // Si AUTO_ECOLE, filtrer par son id_autoecole (confidentialité)
     const aeFilter = idAE ? `AND c.id_autoecole = '${idAE.replace(/'/g, "''")}'` : '';
@@ -201,7 +218,7 @@ router.get('/delibere/:idExamen', requireAuth, async (req, res) => {
       else if (c.resultat === 'N.E.') stR = 'color:#b45309;font-weight:bold;';
       body += `<tr><td style="text-align:center;">${i + 1}</td><td>${esc(c.nom)}</td><td style="font-family:monospace;font-weight:bold;">${esc(c.piece)}</td><td style="text-align:center;">${esc(c.cat)}</td><td>${esc(c.ae)}</td><td style="text-align:center;font-weight:bold;${stEm}">${esc(c.emargement)}</td><td style="text-align:center;${stR}">${esc(c.resultat)}</td></tr>`;
     });
-    body += `</table><table class="footer-table"><tr><td>L'INSPECTEUR</td><td>LE DIRECTEUR REGIONAL</td></tr></table>`;
+    body += `</table><table class="footer-table"><tr><td style="width:50%;text-align:center;vertical-align:top;"><div style="margin-bottom:50px;"><b>L'INSPECTEUR</b></div><div style="font-weight:bold;text-decoration:underline;">${esc(inspecteurNom)}</div></td><td style="width:50%;text-align:center;vertical-align:top;"><div style="margin-bottom:50px;"><b>LE DIRECTEUR REGIONAL</b></div><div style="font-weight:bold;text-decoration:underline;">${esc(directeurNom)}</div></td></tr></table>`;
 
     res.send(wrapDoc(title, body, regionNom));
   } catch (e) { res.status(500).send('Erreur: ' + esc(e.message)); }

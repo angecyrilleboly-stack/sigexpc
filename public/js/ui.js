@@ -58,6 +58,7 @@ function formModal(title, formHtml, saveText = 'Enregistrer') {
         if (el.type === 'checkbox') data[el.name] = el.checked;
         else data[el.name] = el.value;
       });
+      closeModal();
       resolve(data);
     };
   });

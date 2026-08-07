@@ -198,7 +198,7 @@ function buildMenu() {
       html += navItem('analyse', 'fa-chart-bar', 'Analyse (TCD)');
       html += sectionTitle('Administration');
       html += navItem('ae', 'fa-school', 'Auto-Écoles');
-      html += navItem('agents', 'fa-user-shield', 'Agents');
+      html += navItem('agents', 'fa-user-shield', 'Agents Vérificateurs');
       html += navItem('sttc-users', 'fa-users-cog', 'Agents STTC');
       html += navItem('responsables', 'fa-user-tie', 'Signataires');
     } else if (r === 'AUTO_ECOLE') {
