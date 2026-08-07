@@ -408,6 +408,122 @@
     scene.add(cloud);
   }
 
+  // ========== PANNEAUX DE SIGNALISATION 3D ==========
+  // Crée une texture de panneau via Canvas (proche de la réalité)
+  function makeSignTexture(drawFn, size = 256) {
+    const c = document.createElement('canvas');
+    c.width = size; c.height = size;
+    const ctx = c.getContext('2d');
+    drawFn(ctx, size);
+    const tex = new THREE.CanvasTexture(c);
+    tex.anisotropy = 8;
+    return tex;
+  }
+
+  // Panneau STOP (octogone rouge + texte blanc)
+  const stopTex = makeSignTexture((ctx, s) => {
+    ctx.fillStyle = '#dc2626';
+    ctx.beginPath();
+    const cx = s/2, cy = s/2, r = s*0.45;
+    for (let i = 0; i < 8; i++) {
+      const a = Math.PI/8 + i * Math.PI/4;
+      const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+      i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = s*0.04; ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = `bold ${s*0.28}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('STOP', cx, cy);
+  });
+
+  // Panneau Sens Interdit (rond rouge + barre blanche)
+  const noEntryTex = makeSignTexture((ctx, s) => {
+    ctx.fillStyle = '#dc2626';
+    ctx.beginPath(); ctx.arc(s/2, s/2, s*0.45, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = s*0.03; ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(s*0.18, s*0.42, s*0.64, s*0.16);
+  });
+
+  // Panneau Cédez le passage (triangle inversé rouge+blanc)
+  const yieldTex = makeSignTexture((ctx, s) => {
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.moveTo(s*0.1, s*0.15); ctx.lineTo(s*0.9, s*0.15); ctx.lineTo(s*0.5, s*0.88); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#dc2626'; ctx.lineWidth = s*0.08; ctx.stroke();
+    ctx.fillStyle = '#dc2626';
+    ctx.beginPath(); ctx.moveTo(s*0.25, s*0.26); ctx.lineTo(s*0.75, s*0.26); ctx.lineTo(s*0.5, s*0.72); ctx.closePath(); ctx.fill();
+  });
+
+  // Panneau vitesse (rond bleu + nombre)
+  const speedTex = makeSignTexture((ctx, s) => {
+    ctx.fillStyle = '#1e40af';
+    ctx.beginPath(); ctx.arc(s/2, s/2, s*0.46, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = s*0.05; ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = `bold ${s*0.42}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('50', s/2, s/2);
+  });
+
+  // Panneau directionnel (flèche droite, rectangle bleu)
+  const directionTex = makeSignTexture((ctx, s) => {
+    ctx.fillStyle = '#1e40af';
+    ctx.fillRect(0, s*0.25, s, s*0.5);
+    ctx.fillStyle = '#fff';
+    // Flèche
+    ctx.beginPath();
+    ctx.moveTo(s*0.6, s*0.5); ctx.lineTo(s*0.85, s*0.5);
+    ctx.lineTo(s*0.85, s*0.4); ctx.lineTo(s*0.95, s*0.5);
+    ctx.lineTo(s*0.85, s*0.6); ctx.lineTo(s*0.85, s*0.5);
+    ctx.fill();
+    ctx.fillRect(s*0.2, s*0.43, s*0.4, s*0.14);
+  });
+
+  // Crée un panneau complet (panneau + poteau)
+  function createSign(texture, x, z, rotationY = 0, panelHeight = 3.2) {
+    const group = new THREE.Group();
+    // Poteau
+    const post = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.1, panelHeight, 8),
+      new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.6 })
+    );
+    post.position.y = panelHeight / 2;
+    post.castShadow = true;
+    group.add(post);
+    // Panneau
+    const panel = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.2, 1.2),
+      new THREE.MeshStandardMaterial({ map: texture, side: THREE.DoubleSide, roughness: 0.5, metalness: 0.2 })
+    );
+    panel.position.y = panelHeight;
+    panel.castShadow = true;
+    group.add(panel);
+    group.position.set(x, 0, z);
+    group.rotation.y = rotationY;
+    return group;
+  }
+
+  // Placer les panneaux autour de l'intersection
+  scene.add(createSign(stopTex, -6, 5.5, -Math.PI/2));          // STOP gauche avant
+  scene.add(createSign(noEntryTex, 7, -5.5, Math.PI/2));        // Sens interdit droite arrière
+  scene.add(createSign(yieldTex, 7, 5.5, Math.PI/2));           // Cédez le passage droite avant
+  scene.add(createSign(speedTex, -6, -5.5, -Math.PI/2));        // Vitesse 50 gauche arrière
+  scene.add(createSign(directionTex, -12, 2.5, 0.3, 4));        // Directionnel plus loin gauche
+
+  // Poteau panneau directionnel (style flèche multiple, plus grand)
+  const dirPole = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.1, 0.12, 5, 8),
+    new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.6 })
+  );
+  dirPole.position.set(12, 2.5, -2.5);
+  dirPole.castShadow = true;
+  scene.add(dirPole);
+  const dirPanel = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.5, 1.2),
+    new THREE.MeshStandardMaterial({ map: directionTex, side: THREE.DoubleSide, roughness: 0.5 })
+  );
+  dirPanel.position.set(12, 4.5, -2.5);
+  dirPanel.rotation.y = -Math.PI/2;
+  scene.add(dirPanel);
+
   // ========== CYCLE DU FEU TRICOLORE ==========
   let trafficState = 0;
   let trafficTimer = 0;
