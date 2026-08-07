@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIGEXPC - Examen du Permis de Conduire</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚦</text></svg>">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    html, body { width:100%; height:100%; overflow:hidden; background:#0a0e1a; font-family:'Segoe UI',system-ui,sans-serif; }
+    #canvas3d { position:fixed; inset:0; width:100%; height:100%; z-index:1; }
+
+    /* Overlay UI */
+    .ui-overlay { position:fixed; inset:0; z-index:10; pointer-events:none; display:flex; flex-direction:column; }
+    .top-bar { display:flex; justify-content:space-between; align-items:center; padding:25px 40px; pointer-events:auto; }
+    .brand { display:flex; align-items:center; gap:12px; }
+    .brand-icon { width:48px; height:48px; background:linear-gradient(135deg,#f59e0b,#ef4444); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; box-shadow:0 4px 20px rgba(245,158,11,0.4); }
+    .brand-text { color:#fff; font-size:1.4rem; font-weight:800; letter-spacing:1px; }
+    .brand-text span { color:#f59e0b; }
+    .cta-btn { background:linear-gradient(135deg,#1e3a8a,#3b82f6); color:#fff; border:none; padding:12px 28px; border-radius:30px; font-size:0.95rem; font-weight:700; cursor:pointer; pointer-events:auto; box-shadow:0 4px 20px rgba(59,130,246,0.4); transition:transform 0.2s; }
+    .cta-btn:hover { transform:translateY(-2px); box-shadow:0 6px 25px rgba(59,130,246,0.6); }
+
+    .hero { flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:0 20px; }
+    .hero-badge { background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4); color:#fbbf24; padding:8px 20px; border-radius:30px; font-size:0.82rem; font-weight:600; letter-spacing:1px; text-transform:uppercase; margin-bottom:20px; backdrop-filter:blur(10px); }
+    .hero h1 { font-size:clamp(2rem,6vw,4.5rem); font-weight:900; color:#fff; line-height:1.1; text-shadow:0 4px 30px rgba(0,0,0,0.5); max-width:900px; margin-bottom:15px; }
+    .hero h1 .gradient { background:linear-gradient(135deg,#f59e0b,#ef4444,#3b82f6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .hero p { font-size:clamp(1rem,2.5vw,1.3rem); color:#94a3b8; max-width:600px; line-height:1.6; margin-bottom:30px; text-shadow:0 2px 10px rgba(0,0,0,0.5); }
+    .hero-buttons { display:flex; gap:15px; flex-wrap:wrap; justify-content:center; pointer-events:auto; }
+    .btn-primary { background:linear-gradient(135deg,#f59e0b,#ef4444); color:#fff; border:none; padding:16px 40px; border-radius:30px; font-size:1.05rem; font-weight:700; cursor:pointer; box-shadow:0 6px 25px rgba(245,158,11,0.4); transition:all 0.3s; }
+    .btn-primary:hover { transform:translateY(-3px); box-shadow:0 10px 35px rgba(245,158,11,0.6); }
+    .btn-secondary { background:rgba(255,255,255,0.08); backdrop-filter:blur(10px); color:#fff; border:1px solid rgba(255,255,255,0.2); padding:16px 40px; border-radius:30px; font-size:1.05rem; font-weight:600; cursor:pointer; transition:all 0.3s; }
+    .btn-secondary:hover { background:rgba(255,255,255,0.15); border-color:rgba(255,255,255,0.4); }
+
+    .stats-bar { display:flex; gap:40px; padding:20px 40px; justify-content:center; pointer-events:none; }
+    .stat { text-align:center; }
+    .stat-num { font-size:1.8rem; font-weight:900; color:#f59e0b; }
+    .stat-label { font-size:0.75rem; color:#64748b; text-transform:uppercase; letter-spacing:1px; }
+
+    .scroll-indicator { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:10; pointer-events:none; color:#475569; font-size:0.8rem; text-align:center; animation:bounce 2s infinite; }
+    @keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0);} 50%{transform:translateX(-50%) translateY(8px);} }
+
+    .loading-screen { position:fixed; inset:0; background:#0a0e1a; z-index:1000; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity 0.8s; }
+    .loading-screen.hidden { opacity:0; pointer-events:none; }
+    .traffic-loader { display:flex; gap:12px; }
+    .traffic-loader span { width:18px; height:18px; border-radius:50%; animation:tl 1.4s infinite; }
+    .traffic-loader span:nth-child(1){background:#ef4444;animation-delay:0s;}
+    .traffic-loader span:nth-child(2){background:#f59e0b;animation-delay:0.2s;}
+    .traffic-loader span:nth-child(3){background:#10b981;animation-delay:0.4s;}
+    @keyframes tl{0%,100%{opacity:0.2;transform:scale(0.8);}50%{opacity:1;transform:scale(1.2);}}
+    .loading-text { color:#64748b; margin-top:20px; font-size:0.9rem; }
+
+    @media (max-width:768px){ .stats-bar{gap:20px;} .stat-num{font-size:1.3rem;} .top-bar{padding:15px 20px;} }
+  </style>
+</head>
+<body>
+  <div class="loading-screen" id="loadingScreen">
+    <div class="traffic-loader"><span></span><span></span><span></span></div>
+    <div class="loading-text">Chargement de la scène 3D...</div>
+  </div>
+
+  <canvas id="canvas3d"></canvas>
+
+  <div class="ui-overlay">
+    <div class="top-bar">
+      <div class="brand">
+        <div class="brand-icon">🚦</div>
+        <div class="brand-text">SIG<span>EXPC</span></div>
+      </div>
+      <button class="cta-btn" onclick="window.location.href='/'"><i class="fas fa-arrow-right-to-bracket"></i> Accéder à la plateforme</button>
+    </div>
+
+    <div class="hero">
+      <div class="hero-badge"><i class="fas fa-car"></i> &nbsp;Système de Gestion des Examens du Permis de Conduire</div>
+      <h1>Réussissez votre <span class="gradient">permis de conduire</span> en toute sérénité</h1>
+      <p>Code et conduite — La plateforme officielle de gestion des examens du permis de conduire en Côte d'Ivoire.</p>
+      <div class="hero-buttons">
+        <button class="btn-primary" onclick="window.location.href='/autoecole'"><i class="fas fa-car-side"></i> Espace Auto-École</button>
+        <button class="btn-secondary" onclick="window.location.href='/'"><i class="fas fa-building-columns"></i> Espace Direction</button>
+      </div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-num">3244+</div><div class="stat-label">Candidats</div></div>
+      <div class="stat"><div class="stat-num">7</div><div class="stat-label">Auto-Écoles</div></div>
+      <div class="stat"><div class="stat-num">24h</div><div class="stat-label">Support</div></div>
+    </div>
+  </div>
+
+  <div class="scroll-indicator">Section 1 — Intersection<br><i class="fas fa-chevron-down"></i></div>
+
+  <script type="importmap">
+  { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+  </script>
+
+  <script type="module">
+  import * as THREE from 'three';
+
+  const canvas = document.getElementById('canvas3d');
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0x0a0e1a, 25, 80);
+
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 200);
+  camera.position.set(0, 8, 22);
+  camera.lookAt(0, 3, 0);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+
+  // ========== LUMIÈRES ==========
+  const ambient = new THREE.AmbientLight(0x404060, 0.6);
+  scene.add(ambient);
+  const moonLight = new THREE.DirectionalLight(0x8090ff, 0.8);
+  moonLight.position.set(10, 20, 5);
+  moonLight.castShadow = true;
+  moonLight.shadow.mapSize.set(2048, 2048);
+  moonLight.shadow.camera.left = -30; moonLight.shadow.camera.right = 30;
+  moonLight.shadow.camera.top = 30; moonLight.shadow.camera.bottom = -30;
+  scene.add(moonLight);
+
+  // Lumières de rue (lampadaires)
+  for (let i = -2; i <= 2; i += 2) {
+    const lamp = new THREE.PointLight(0xffaa44, 1.5, 25, 2);
+    lamp.position.set(i * 8, 7, -3);
+    scene.add(lamp);
+  }
+
+  // ========== SOL / ROUTE ==========
+  const groundGeo = new THREE.PlaneGeometry(200, 200);
+  const groundMat = new THREE.MeshStandardMaterial({ color: 0x1a1f35, roughness: 0.9 });
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = 0;
+  ground.receiveShadow = true;
+  scene.add(ground);
+
+  // Route principale (horizontale, gris foncé)
+  const roadGeo = new THREE.PlaneGeometry(60, 12);
+  const roadMat = new THREE.MeshStandardMaterial({ color: 0x2a2f3e, roughness: 0.85 });
+  const road = new THREE.Mesh(roadGeo, roadMat);
+  road.rotation.x = -Math.PI / 2;
+  road.position.y = 0.05;
+  road.receiveShadow = true;
+  scene.add(road);
+
+  // Ligne centrale de la route (pointillés jaunes)
+  for (let i = -25; i <= 25; i += 3) {
+    const dash = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.5, 0.25),
+      new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xf59e0b, emissiveIntensity: 0.3 })
+    );
+    dash.rotation.x = -Math.PI / 2;
+    dash.position.set(i, 0.06, 0);
+    scene.add(dash);
+  }
+
+  // Passages piétons (bandes blanches)
+  for (let i = -4; i <= 4; i += 1.5) {
+    const stripe = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.8, 3.5),
+      new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6 })
+    );
+    stripe.rotation.x = -Math.PI / 2;
+    stripe.position.set(i, 0.07, 4.5);
+    scene.add(stripe);
+  }
+
+  // Trottoirs
+  const sidewalkMat = new THREE.MeshStandardMaterial({ color: 0x3a3f4e, roughness: 0.8 });
+  for (let z of [7, -7]) {
+    const sw = new THREE.Mesh(new THREE.BoxGeometry(60, 0.4, 3), sidewalkMat);
+    sw.position.set(0, 0.2, z);
+    sw.castShadow = true; sw.receiveShadow = true;
+    scene.add(sw);
+  }
+
+  // ========== FEU TRICOLORE ==========
+  const trafficGroup = new THREE.Group();
+  // Poteau
+  const poleGeo = new THREE.CylinderGeometry(0.15, 0.2, 6, 12);
+  const poleMat = new THREE.MeshStandardMaterial({ color: 0x1a1a2e, metalness: 0.7, roughness: 0.3 });
+  const pole = new THREE.Mesh(poleGeo, poleMat);
+  pole.position.set(0, 3, 0);
+  pole.castShadow = true;
+  trafficGroup.add(pole);
+
+  // Boîtier du feu
+  const housingGeo = new THREE.BoxGeometry(0.9, 2.5, 0.6);
+  const housing = new THREE.Mesh(housingGeo, new THREE.MeshStandardMaterial({ color: 0x111827, metalness: 0.6, roughness: 0.4 }));
+  housing.position.set(0, 5.8, 0);
+  housing.castShadow = true;
+  trafficGroup.add(housing);
+
+  // Les 3 feux (rouge, orange, vert)
+  const lightColors = [0xef4444, 0xf59e0b, 0x10b981];
+  const trafficLights = [];
+  for (let i = 0; i < 3; i++) {
+    const lightMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.32, 24, 24),
+      new THREE.MeshStandardMaterial({ color: lightColors[i], emissive: 0x000000, emissiveIntensity: 0, roughness: 0.3 })
+    );
+    lightMesh.position.set(0, 5.0 + i * 0.8, 0.32);
+    trafficGroup.add(lightMesh);
+
+    // Halo lumineux (pointLight)
+    const halo = new THREE.PointLight(lightColors[i], 0, 8, 2);
+    halo.position.copy(lightMesh.position);
+    trafficGroup.add(halo);
+
+    trafficLights.push({ mesh: lightMesh, mat: lightMesh.material, halo, color: lightColors[i] });
+  }
+  trafficGroup.position.set(4, 0, 5.5);
+  scene.add(trafficGroup);
+
+  // ========== VOITURE ==========
+  function createCar() {
+    const car = new THREE.Group();
+    const bodyColor = 0x2563eb;
+    // Carrosserie basse
+    const lowerBody = new THREE.Mesh(
+      new THREE.BoxGeometry(3.2, 0.8, 1.5),
+      new THREE.MeshStandardMaterial({ color: bodyColor, metalness: 0.6, roughness: 0.3 })
+    );
+    lowerBody.position.y = 0.65;
+    lowerBody.castShadow = true;
+    car.add(lowerBody);
+    // Habitacle
+    const cabin = new THREE.Mesh(
+      new THREE.BoxGeometry(1.6, 0.7, 1.3),
+      new THREE.MeshStandardMaterial({ color: 0x1e3a8a, metalness: 0.4, roughness: 0.2 })
+    );
+    cabin.position.set(-0.2, 1.3, 0);
+    cabin.castShadow = true;
+    car.add(cabin);
+    // Vitres
+    const windows = new THREE.Mesh(
+      new THREE.BoxGeometry(1.5, 0.5, 1.25),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.05, transparent: true, opacity: 0.7 })
+    );
+    windows.position.set(-0.2, 1.35, 0);
+    car.add(windows);
+    // Phares
+    for (let z of [0.5, -0.5]) {
+      const headlight = new THREE.Mesh(
+        new THREE.CircleGeometry(0.18, 12),
+        new THREE.MeshStandardMaterial({ color: 0xffffaa, emissive: 0xffffaa, emissiveIntensity: 1.5 })
+      );
+      headlight.position.set(1.6, 0.7, z);
+      headlight.rotation.y = Math.PI/2;
+      car.add(headlight);
+    }
+    // Feux arrière
+    for (let z of [0.5, -0.5]) {
+      const tail = new THREE.Mesh(
+        new THREE.CircleGeometry(0.15, 12),
+        new THREE.MeshStandardMaterial({ color: 0xff2222, emissive: 0xff2222, emissiveIntensity: 1.5 })
+      );
+      tail.position.set(-1.6, 0.7, z);
+      tail.rotation.y = -Math.PI/2;
+      car.add(tail);
+    }
+    // Roues
+    const wheelGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.3, 16);
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x0f0f0f, roughness: 0.8 });
+    const wheelPositions = [[1.0, 0.4, 0.75], [1.0, 0.4, -0.75], [-1.0, 0.4, 0.75], [-1.0, 0.4, -0.75]];
+    const wheels = [];
+    wheelPositions.forEach(p => {
+      const w = new THREE.Mesh(wheelGeo, wheelMat);
+      w.position.set(...p);
+      w.rotation.x = Math.PI / 2;
+      w.castShadow = true;
+      car.add(w);
+      wheels.push(w);
+    });
+    car.userData.wheels = wheels;
+    return car;
+  }
+
+  const car = createCar();
+  car.position.set(-8, 0, 1.2);
+  scene.add(car);
+
+  // ========== MOTO + MOTARD ==========
+  function createMotorcycle() {
+    const moto = new THREE.Group();
+    // Réservoir / cadre
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(1.2, 0.5, 0.5),
+      new THREE.MeshStandardMaterial({ color: 0xdc2626, metalness: 0.7, roughness: 0.25 })
+    );
+    body.position.y = 0.7;
+    body.castShadow = true;
+    moto.add(body);
+    // Selle
+    const seat = new THREE.Mesh(
+      new THREE.BoxGeometry(0.6, 0.15, 0.4),
+      new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9 })
+    );
+    seat.position.set(-0.3, 0.95, 0);
+    moto.add(seat);
+    // Guidon
+    const handlebar = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04, 0.04, 0.8, 8),
+      new THREE.MeshStandardMaterial({ color: 0x222, metalness: 0.8 })
+    );
+    handlebar.position.set(0.6, 1.1, 0);
+    handlebar.rotation.x = Math.PI/2;
+    moto.add(handlebar);
+    // Phare moto
+    const headlight = new THREE.Mesh(
+      new THREE.CircleGeometry(0.2, 12),
+      new THREE.MeshStandardMaterial({ color: 0xffffaa, emissive: 0xffffaa, emissiveIntensity: 1.5 })
+    );
+    headlight.position.set(0.8, 0.85, 0);
+    headlight.rotation.y = Math.PI/2;
+    moto.add(headlight);
+    // Roues
+    const wheelGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.2, 16);
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.9 });
+    const wheels = [];
+    [0.7, -0.7].forEach(x => {
+      const w = new THREE.Mesh(wheelGeo, wheelMat);
+      w.position.set(x, 0.45, 0);
+      w.rotation.x = Math.PI/2;
+      w.castShadow = true;
+      moto.add(w);
+      wheels.push(w);
+    });
+
+    // MOTARD (personne)
+    const rider = new THREE.Group();
+    const skinMat = new THREE.MeshStandardMaterial({ color: 0x8b6914, roughness: 0.6 });
+    const jacketMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.7 });
+    // Torse
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.7, 0.35), jacketMat);
+    torso.position.set(-0.1, 1.45, 0);
+    torso.castShadow = true;
+    rider.add(torso);
+    // Bras gauche (tendu vers guidon)
+    const armL = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.5), jacketMat);
+    armL.position.set(0.3, 1.4, 0.2);
+    armL.rotation.x = 0.6;
+    rider.add(armL);
+    // Bras droit
+    const armR = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.5), jacketMat);
+    armR.position.set(0.3, 1.4, -0.2);
+    armR.rotation.x = 0.6;
+    rider.add(armR);
+    // Jambes
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.8 });
+    const legL = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.7, 0.2), legMat);
+    legL.position.set(-0.1, 0.8, 0.18);
+    rider.add(legL);
+    const legR = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.7, 0.2), legMat);
+    legR.position.set(-0.1, 0.8, -0.18);
+    rider.add(legR);
+    // Tête + casque
+    const helmet = new THREE.Mesh(
+      new THREE.SphereGeometry(0.22, 16, 16),
+      new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.5, roughness: 0.2 })
+    );
+    helmet.position.set(0.1, 2.05, 0);
+    helmet.castShadow = true;
+    rider.add(helmet);
+    // Visière du casque
+    const visor = new THREE.Mesh(
+      new THREE.BoxGeometry(0.15, 0.1, 0.3),
+      new THREE.MeshStandardMaterial({ color: 0x111827, metalness: 0.9, roughness: 0.05, transparent: true, opacity: 0.8 })
+    );
+    visor.position.set(0.22, 2.05, 0);
+    rider.add(visor);
+
+    moto.add(rider);
+    moto.userData.wheels = wheels;
+    return moto;
+  }
+
+  const motorcycle = createMotorcycle();
+  motorcycle.position.set(-5, 0, -1.5);
+  scene.add(motorcycle);
+
+  // ========== DÉCOR (bâtiments simples en arrière-plan) ==========
+  for (let i = -4; i <= 4; i++) {
+    if (i === 0) continue;
+    const h = 5 + Math.random() * 8;
+    const b = new THREE.Mesh(
+      new THREE.BoxGeometry(3, h, 3),
+      new THREE.MeshStandardMaterial({ color: i % 2 === 0 ? 0x1e293b : 0x1e2a4a, roughness: 0.8 })
+    );
+    b.position.set(i * 6, h/2, -15);
+    b.castShadow = true;
+    scene.add(b);
+    // Fenêtres allumées aléatoires
+    for (let wy = 1; wy < h - 1; wy += 1.5) {
+      for (let wx = -1; wx <= 1; wx += 0.8) {
+        if (Math.random() > 0.5) {
+          const win = new THREE.Mesh(
+            new THREE.PlaneGeometry(0.4, 0.5),
+            new THREE.MeshStandardMaterial({ color: 0xffdd88, emissive: 0xffdd88, emissiveIntensity: 0.8 })
+          );
+          win.position.set(i * 6 + wx, wy, -13.4);
+          scene.add(win);
+        }
+      }
+    }
+  }
+
+  // Étoiles (particules)
+  const starGeo = new THREE.BufferGeometry();
+  const starCount = 300;
+  const starPos = new Float32Array(starCount * 3);
+  for (let i = 0; i < starCount * 3; i += 3) {
+    starPos[i] = (Math.random() - 0.5) * 200;
+    starPos[i+1] = Math.random() * 60 + 20;
+    starPos[i+2] = (Math.random() - 0.5) * 200;
+  }
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.3, transparent: true, opacity: 0.6 }));
+  scene.add(stars);
+
+  // ========== ANIMATION : CYCLE DU FEU TRICOLORE ==========
+  // État: 0=rouge, 1=vert, 2=orange
+  // rouge 5s -> vert 5s -> orange 2s -> rouge...
+  let trafficState = 0;
+  let trafficTimer = 0;
+  const RED_DUR = 5, GREEN_DUR = 5, ORANGE_DUR = 2;
+
+  function setTrafficLight(state) {
+    trafficLights.forEach((l, i) => {
+      const active = i === state;
+      l.mat.emissive.setHex(active ? l.color : 0x000000);
+      l.mat.emissiveIntensity = active ? 1.5 : 0;
+      l.halo.intensity = active ? 2.5 : 0;
+    });
+  }
+  setTrafficLight(0); // commence par rouge
+
+  // ========== MOUVEMENT VÉHICULES ==========
+  // Les véhicules attendent au rouge, avancent au vert, ralentissent à l'orange
+  const VEHICLES = [
+    { obj: car, baseX: -8, speed: 0, maxSpeed: 0.08, wheels: car.userData.wheels, wheelRadius: 0.4 },
+    { obj: motorcycle, baseX: -5, speed: 0, maxSpeed: 0.075, wheels: motorcycle.userData.wheels, wheelRadius: 0.45 }
+  ];
+
+  // ========== INTERACTION SOURIS (parallax caméra) ==========
+  let mouseX = 0, mouseY = 0;
+  window.addEventListener('mousemove', (e) => {
+    mouseX = (e.clientX / window.innerWidth - 0.5);
+    mouseY = (e.clientY / window.innerHeight - 0.5);
+  });
+
+  // ========== BOUCLE D'ANIMATION ==========
+  const clock = new THREE.Clock();
+  function animate() {
+    requestAnimationFrame(animate);
+    const dt = clock.getDelta();
+
+    // Cycle du feu
+    trafficTimer += dt;
+    if (trafficState === 0 && trafficTimer >= RED_DUR) { trafficState = 1; trafficTimer = 0; setTrafficLight(1); }
+    else if (trafficState === 1 && trafficTimer >= GREEN_DUR) { trafficState = 2; trafficTimer = 0; setTrafficLight(2); }
+    else if (trafficState === 2 && trafficTimer >= ORANGE_DUR) { trafficState = 0; trafficTimer = 0; setTrafficLight(0); }
+
+    // Mouvement véhicules
+    VEHICLES.forEach(v => {
+      // Déterminer la vitesse cible selon l'état du feu
+      let targetSpeed = 0;
+      if (trafficState === 1) targetSpeed = v.maxSpeed; // vert -> avance
+      else if (trafficState === 2) targetSpeed = v.maxSpeed * 0.3; // orange -> ralentit
+      else targetSpeed = 0; // rouge -> arrêt
+
+      // Accélération / freinage en douceur
+      v.speed += (targetSpeed - v.speed) * 0.05;
+
+      // Position: boucle infinie (retour au départ après 20 unités)
+      v.baseX += v.speed;
+      if (v.baseX > 15) v.baseX = -10;
+      v.obj.position.x = v.baseX;
+
+      // Rotation des roues
+      const rotSpeed = v.speed / v.wheelRadius;
+      v.wheels.forEach(w => { w.rotation.y += rotSpeed; });
+    });
+
+    // Parallax caméra (léger mouvement selon la souris)
+    camera.position.x += (mouseX * 3 - camera.position.x) * 0.03;
+    camera.position.y += (8 + mouseY * -2 - camera.position.y) * 0.03;
+    camera.lookAt(0, 3, 0);
+
+    // Étoiles scintillent légèrement
+    stars.rotation.y += dt * 0.01;
+
+    renderer.render(scene, camera);
+  }
+
+  // Cacher le loading screen une fois prêt
+  setTimeout(() => {
+    document.getElementById('loadingScreen').classList.add('hidden');
+    setTimeout(() => { document.getElementById('loadingScreen').style.display = 'none'; }, 800);
+  }, 1200);
+
+  animate();
+
+  // Resize
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+  </script>
+</body>
+</html>
