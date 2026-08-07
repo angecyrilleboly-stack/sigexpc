@@ -67,7 +67,7 @@ const statsRoutes = require('./src/routes/stats');
 const abonnementRoutes = require('./src/routes/abonnements');
 const documentRoutes = require('./src/routes/documents');
 const { attachUser } = require('./src/middleware/auth');
-const { requireActiveAbonnement } = require('./src/middleware/checkAbonnement');
+const { requireActiveAbonnement, scannerEtBloquerAExpirées } = require('./src/middleware/checkAbonnement');
 const { demarrerJobRappel } = require('./src/config/rappelJob');
 
 const app = express();
@@ -160,6 +160,10 @@ app.listen(PORT, async () => {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   // Initialiser la base (création tables + import données) AVANT d'accepter les requêtes
   await initDBIfNeeded();
+  // Scanner et bloquer les AE expirées (passe automatiquement à 'bloque')
+  await scannerEtBloquerAExpirées();
   // Démarrer le job de rappel d'expiration d'abonnement (J-3)
   demarrerJobRappel();
+  // Rescan toutes les heures (en cas d'expiration en cours de fonctionnement)
+  setInterval(() => { scannerEtBloquerAExpirées(); }, 60 * 60 * 1000);
 });

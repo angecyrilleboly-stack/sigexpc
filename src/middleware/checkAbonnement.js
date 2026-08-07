@@ -76,4 +76,39 @@ function invalidateAboCache(idAE) {
   _cache.delete(idAE);
 }
 
-module.exports = { requireActiveAbonnement, checkAboAE, invalidateAboCache };
+// ============================================================================
+// Scan global : passe toutes les AE expirées à 'bloque'
+// À appeler au démarrage du serveur + périodiquement.
+// ============================================================================
+async function scannerEtBloquerAExpirées() {
+  try {
+    // Trouver toutes les AE actives dont l'abonnement a expiré (date_fin dépassée)
+    const [expirees] = await pool.query(`
+      SELECT ae.id, ae.nom, abo.date_fin
+      FROM auto_ecoles ae
+      JOIN abonnements_auto_ecoles abo ON abo.id_ae = ae.id
+      WHERE ae.statut = 'actif'
+        AND abo.statut = 'actif'
+        AND abo.date_fin < ?
+    `, [new Date().toISOString().slice(0, 19).replace('T', ' ')]);
+
+    if (expirees.length === 0) return 0;
+
+    // Bloquer chaque AE expirée + marquer son abonnement comme expiré
+    for (const ae of expirees) {
+      try {
+        await pool.query("UPDATE auto_ecoles SET statut = 'bloque' WHERE id = ?", [ae.id]);
+        await pool.query("UPDATE abonnements_auto_ecoles SET statut = 'expire' WHERE id_ae = ? AND statut = 'actif'", [ae.id]);
+        _cache.delete(ae.id); // invalider le cache
+      } catch (e) { /* non bloquant */ }
+    }
+
+    console.log(`🔒 ${expirees.length} auto-école(s) expirée(s) bloquée(s) automatiquement.`);
+    return expirees.length;
+  } catch (e) {
+    console.error('Erreur scan expiration:', e.message);
+    return 0;
+  }
+}
+
+module.exports = { requireActiveAbonnement, checkAboAE, invalidateAboCache, scannerEtBloquerAExpirées };
