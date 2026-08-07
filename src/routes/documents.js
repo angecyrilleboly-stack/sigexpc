@@ -160,11 +160,11 @@ router.get('/delibere/:idExamen', requireAuth, async (req, res) => {
     const exam = exams[0];
     const regionNom = await getRegionNom(idReg);
 
-    // Récupérer le nom du directeur régional (signataire)
+    // Récupérer le nom du directeur régional (signataire) — nettoyé du préfixe
     let directeurNom = '';
     try {
       const [pr] = await pool.query('SELECT directeur_regional FROM parametres_region WHERE id_region = ?', [idReg]);
-      if (pr.length && pr[0].directeur_regional) directeurNom = pr[0].directeur_regional;
+      if (pr.length && pr[0].directeur_regional) directeurNom = cleanSignataire(pr[0].directeur_regional);
     } catch (e) {}
     const inspecteurNom = (exam.inspecteur_nom && exam.inspecteur_nom !== 'À définir') ? exam.inspecteur_nom : '';
 
