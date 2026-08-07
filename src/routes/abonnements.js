@@ -96,16 +96,19 @@ router.post('/:idAE/toggle', requireAuth, requireRole('SUPER_ADMIN'), async (req
   try {
     const { newStatus } = req.body;
     const idAE = req.params.idAE;
+
+    // 1. Mettre à jour le statut de l'AE
     await pool.query('UPDATE auto_ecoles SET statut = ? WHERE id = ?', [newStatus, idAE]);
 
-    const [params] = await pool.query('SELECT montant, duree_jours FROM parametres_abonnement ORDER BY id DESC LIMIT 1');
-    const p = params[0] || { montant: 200, duree_jours: 30 };
-
     if (newStatus === 'actif') {
+      // 2. Créer/mettre à jour l'abonnement
+      const [params] = await pool.query('SELECT montant, duree_jours FROM parametres_abonnement ORDER BY id DESC LIMIT 1');
+      const p = params[0] || { montant: 200, duree_jours: 30 };
       const now = new Date();
       const fin = new Date(now); fin.setDate(fin.getDate() + p.duree_jours);
       const nowStr = now.toISOString().slice(0, 19).replace('T', ' ');
       const finStr = fin.toISOString().slice(0, 19).replace('T', ' ');
+
       const [exist] = await pool.query('SELECT id FROM abonnements_auto_ecoles WHERE id_ae = ? ORDER BY id DESC LIMIT 1', [idAE]);
       if (exist.length) {
         await pool.query('UPDATE abonnements_auto_ecoles SET date_debut = ?, date_fin = ?, statut = ?, montant_paye = ? WHERE id = ?',
@@ -114,22 +117,28 @@ router.post('/:idAE/toggle', requireAuth, requireRole('SUPER_ADMIN'), async (req
         await pool.query('INSERT INTO abonnements_auto_ecoles (id_ae, date_debut, date_fin, statut, montant_paye) VALUES (?, ?, ?, ?, ?)',
           [idAE, nowStr, finStr, 'actif', p.montant]);
       }
+
+      // 3. Créer un reçu
       const numRecu = `REC-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}-${String(idAE).replace('AE-', '')}`;
+      const recuId = `REC-${Math.floor(Math.random() * 900000 + 100000)}`;
       await pool.query('INSERT INTO recus_paiement (id, id_ae, date_emission, montant, date_debut, date_fin, statut, num_recu) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        [`REC-${Math.floor(Math.random()*900000+100000)}`, idAE, nowStr, p.montant, nowStr, finStr, 'actif', numRecu]);
+        [recuId, idAE, nowStr, p.montant, nowStr, finStr, 'actif', numRecu]);
     } else {
+      // Bloquer : marquer l'abonnement comme expiré
       await pool.query('UPDATE abonnements_auto_ecoles SET statut = ? WHERE id_ae = ?', ['expire', idAE]);
     }
 
-    // Renvoyer la liste mise à jour
-    const [aes] = await pool.query(`SELECT ae.*, dr.nom_region FROM auto_ecoles ae JOIN directions_regionales dr ON ae.id_region = dr.id ORDER BY ae.nom`);
-    const list = [];
-    for (const ae of aes) {
-      const abo = await getAboStatus(ae.id);
-      list.push({ id: ae.id, region: ae.nom_region, nom: ae.nom, email: ae.email, tel: ae.telephone, statut: ae.statut, joursRestants: abo.joursRestants, estActif: abo.estActif, dateFin: abo.dateFin ? fmtDateFR(abo.dateFin) : 'N/A' });
-    }
-    res.json({ success: true, list });
-  } catch (e) { res.status(500).json({ success: false, msg: e.message }); }
+    // Invalider le cache d'abonnement pour cette AE
+    try {
+      const { invalidateAboCache } = require('../middleware/checkAbonnement');
+      invalidateAboCache(idAE);
+    } catch (e) { /* non bloquant */ }
+
+    res.json({ success: true });
+  } catch (e) {
+    console.error('Erreur toggle abo:', e.message);
+    res.status(500).json({ success: false, msg: e.message });
+  }
 });
 
 // ============================================================================
