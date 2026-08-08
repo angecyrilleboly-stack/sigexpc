@@ -11,6 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   // Vérifier session existante
   checkSession();
+  // Enregistrer le Service Worker (PWA)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+      .then((reg) => console.log('SW enregistré:', reg.scope))
+      .catch((err) => console.log('SW erreur:', err));
+  }
 });
 
 // ---------- Theme ----------

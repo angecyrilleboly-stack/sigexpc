@@ -5,8 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SIGEXPC - Espace Auto-Écoles</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚦</text></svg>">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1e3a8a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="SIGEXPC">
+  <link rel="apple-touch-icon" href="/img/icon-192.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="/css/styles.css?v=20260725v">
+  <link rel="stylesheet" href="/css/styles.css?v=20260801d">
   <style>
     /* Toast simple pour cette page autonome */
     #toastContainer { position: fixed; top: 20px; right: 20px; z-index: 9999; }
@@ -228,6 +233,11 @@ async function redirectToGeniusPay() {
 
 document.getElementById('btnLogin').addEventListener('click', handleLogin);
 document.getElementById('lPass').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+
+// Enregistrer le Service Worker (PWA)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+}
 </script>
 </body>
 </html>

@@ -1,0 +1,57 @@
+{
+  "name": "SIGEXPC - Examen du Permis de Conduire",
+  "short_name": "SIGEXPC",
+  "description": "Système de Gestion des Examens du Permis de Conduire - Côte d'Ivoire",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f172a",
+  "theme_color": "#1e3a8a",
+  "dir": "ltr",
+  "lang": "fr",
+  "categories": ["productivity", "education"],
+  "icons": [
+    {
+      "src": "/img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/img/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Tableau de bord SIGEXPC"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Connexion Auto-École",
+      "short_name": "Auto-École",
+      "description": "Accéder à l'espace auto-écoles",
+      "url": "/autoecole"
+    },
+    {
+      "name": "Landing Page",
+      "short_name": "Accueil",
+      "description": "Page d'accueil SIGEXPC",
+      "url": "/lp"
+    }
+  ]
+}
