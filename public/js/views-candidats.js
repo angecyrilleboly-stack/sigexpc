@@ -238,24 +238,71 @@ async function openBordereaux() {
   const res = await API.examens();
   const list = res.list || [];
 
+  // Stats rapides
+  const total = list.length;
+  const ouverts = list.filter(e => String(e.statut) === 'ouvert' || String(e.statut) === 'rajout').length;
+  const fermes = list.filter(e => String(e.statut) === 'ferme').length;
+
   content.innerHTML = `<div class="fade-in">
-    ${setTitle("Bordereaux d'examen")}
-    <p class="text-muted" style="margin-top:-8px;">Imprimez le bordereau <b>principal</b> (candidats autorisés) ou le bordereau de <b>rajout</b> avant la délibération.</p>
-    <div class="card"><div class="table-wrap"><table>
-      <thead><tr><th>Type et Date</th><th>Lieu</th><th>Statut</th><th>Bordereaux</th></tr></thead>
-      <tbody>
-      ${list.length === 0 ? `<tr><td colspan="4"><div class="empty-state"><i class="fas fa-print"></i><p>Aucun examen.</p></div></td></tr>` :
-        list.map(e => `<tr>
-          <td><b>${esc(e.type_examen)}</b><br><span class="text-muted" style="font-size:0.82rem;">${formatDateFR(e.date_examen)}</span></td>
-          <td>${esc(e.lieu || '—')}</td>
-          <td>${statutBadge(e.statut)}</td>
-          <td>
-            <button class="btn btn-sm btn-ghost" onclick="openDocument('/api/documents/bordereau/${e.id}')"><i class="fas fa-file-pdf"></i> Principal</button>
-            <button class="btn btn-sm btn-ghost" onclick="openDocument('/api/documents/bordereau/${e.id}?rajout=1')"><i class="fas fa-file-pdf"></i> Rajout</button>
-          </td>
-        </tr>`).join('')}
-      </tbody>
-    </table></div></div>
+    ${setTitle("Bordereaux d'examen", `<button class="btn btn-sm btn-ghost" onclick="openBordereaux()"><i class="fas fa-sync"></i></button>`)}
+    <div class="stats-grid" style="margin-bottom:20px;">
+      <div class="stat-card" style="cursor:default;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);">
+        <i class="fas fa-file-lines stat-icon-bg" style="color:var(--blue);opacity:0.1;"></i>
+        <div class="stat-label">Total examens</div>
+        <div class="stat-value" style="color:var(--blue);">${total}</div>
+      </div>
+      <div class="stat-card" style="cursor:default;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.15);">
+        <i class="fas fa-lock-open stat-icon-bg" style="color:var(--yellow);opacity:0.1;"></i>
+        <div class="stat-label">Ouverts</div>
+        <div class="stat-value" style="color:var(--yellow);">${ouverts}</div>
+      </div>
+      <div class="stat-card" style="cursor:default;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);">
+        <i class="fas fa-lock stat-icon-bg" style="color:var(--danger);opacity:0.1;"></i>
+        <div class="stat-label">Fermés</div>
+        <div class="stat-value" style="color:var(--danger);">${fermes}</div>
+      </div>
+    </div>
+    <div class="card">
+      <div style="padding:18px 25px;border-bottom:1px solid var(--border);">
+        <h3 style="margin:0;font-size:1.05rem;"><i class="fas fa-print" style="color:var(--blue);"></i> Impression des bordereaux</h3>
+        <p style="margin:6px 0 0;font-size:0.82rem;color:var(--gray);">Cliquez sur <b style="color:var(--success);">Principal</b> pour la liste officielle ou <b style="color:var(--yellow);">Rajout</b> pour les ajouts de dernière minute.</p>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Session d'examen</th><th>Lieu</th><th>Statut</th><th style="text-align:center;">Bordereaux PDF</th></tr></thead>
+        <tbody>
+        ${list.length === 0 ? `<tr><td colspan="4"><div class="empty-state"><i class="fas fa-print"></i><p>Aucun examen programmé.</p></div></td></tr>` :
+          list.map(e => {
+            const st = String(e.statut);
+            const icon = st === 'ouvert' ? 'fa-lock-open' : st === 'rajout' ? 'fa-plus-circle' : 'fa-lock';
+            return `<tr style="transition:background 0.15s;" onmouseover="this.style.background='var(--table-hover)'" onmouseout="this.style.background=''">
+              <td>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <div style="width:38px;height:38px;border-radius:10px;background:rgba(59,130,246,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="fas ${String(e.type_examen).includes('Code') ? 'fa-book' : 'fa-car'}" style="color:var(--blue);font-size:0.9rem;"></i>
+                  </div>
+                  <div>
+                    <b style="font-size:1rem;">${esc(e.type_examen)}</b><br>
+                    <span style="font-size:0.8rem;color:var(--gray);"><i class="fas fa-calendar" style="font-size:0.7rem;"></i> ${formatDateFR(e.date_examen)}</span>
+                  </div>
+                </div>
+              </td>
+              <td><span style="font-size:0.88rem;color:var(--gray);"><i class="fas fa-map-marker-alt" style="font-size:0.75rem;"></i> ${esc(e.lieu || 'À définir')}</span></td>
+              <td>${statutBadge(e.statut)}</td>
+              <td>
+                <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                  <button class="btn btn-sm" style="background:var(--success);color:#fff;padding:8px 16px;border-radius:8px;font-weight:600;box-shadow:0 2px 8px rgba(16,185,129,0.25);" onclick="openDocument('/api/documents/bordereau/${e.id}')">
+                    <i class="fas fa-file-pdf"></i> Principal
+                  </button>
+                  <button class="btn btn-sm" style="background:var(--yellow);color:#1a1a1a;padding:8px 16px;border-radius:8px;font-weight:600;box-shadow:0 2px 8px rgba(245,158,11,0.25);" onclick="openDocument('/api/documents/bordereau/${e.id}?rajout=1')">
+                    <i class="fas fa-file-pdf"></i> Rajout
+                  </button>
+                </div>
+              </td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table></div>
+    </div>
   </div>`;
 }
 

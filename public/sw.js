@@ -1,12 +1,18 @@
 // ============================================================================
-//  SIGEXPC - Service Worker (PWA)
-//  Cache les fichiers statiques pour fonctionnement hors ligne.
+//  SIGEXPC - Service Worker (PWA) v3
+//  Cache agressif pour chargement instantané de toute l'application.
 // ============================================================================
-const CACHE_NAME = 'sigexpc-v2-20260801';
-const STATIC_ASSETS = [
+const CACHE_VERSION = 'sigexpc-v3-20260801';
+const CACHE_STATIC = CACHE_VERSION + '-static';
+const CACHE_PAGES = CACHE_VERSION + '-pages';
+const CACHE_API = CACHE_VERSION + '-api';
+
+// Fichiers à précharger immédiatement (CSS, JS, images)
+const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/autoecole.html',
+  '/offline.html',
   '/manifest.json',
   '/css/styles.css',
   '/js/api.js',
@@ -19,91 +25,91 @@ const STATIC_ASSETS = [
   '/img/bg-login.png',
   '/img/icon-192.png',
   '/img/icon-512.png',
-  '/offline.html'
+  '/img/icon-maskable-512.png'
 ];
 
-// ===== INSTALL : mettre en cache les fichiers statiques =====
+// ===== INSTALL : précharger tous les fichiers statiques =====
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_STATIC)
+      .then((cache) => cache.addAll(PRECACHE_URLS))
       .then(() => self.skipWaiting())
-      .catch((err) => console.log('SW install error:', err))
+      .catch((err) => console.log('SW precache error:', err))
   );
 });
 
-// ===== ACTIVATE : nettoyer les anciens caches =====
+// ===== ACTIVATE : nettoyer anciens caches =====
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys.filter((key) => !key.startsWith(CACHE_VERSION)).map((key) => caches.delete(key))
       ))
       .then(() => self.clients.claim())
   );
 });
 
-// ===== FETCH : stratégies de cache =====
+// ===== FETCH : stratégies de cache intelligentes =====
 self.addEventListener('fetch', (event) => {
   const req = event.request;
-
-  // Ignorer les requêtes non GET
   if (req.method !== 'GET') return;
 
-  // Ignorer les requêtes vers CDN externes (Tailwind, Font Awesome, Chart.js, Three.js)
   const url = new URL(req.url);
+  // Ignorer CDN externes
   if (url.origin !== self.location.origin) return;
 
-  // --- STRATÉGIE 1 : Network First pour les API (données fraîches) ---
+  // --- API : Network First (données fraîches) avec cache de secours ---
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
-          return res;
-        })
-        .catch(() => caches.match(req))
-    );
-    return;
-  }
-
-  // --- STRATÉGIE 2 : Cache First pour les fichiers statiques (CSS, JS, images) ---
-  if (req.destination === 'style' ||
-      req.destination === 'script' ||
-      req.destination === 'image' ||
-      req.destination === 'font' ||
-      url.pathname.match(/\.(css|js|png|jpg|svg|ico|woff2?)$/)) {
-    event.respondWith(
-      caches.match(req)
-        .then((cached) => {
-          if (cached) return cached;
-          return fetch(req).then((res) => {
+          if (res.ok) {
             const clone = res.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
-            return res;
-          });
+            caches.open(CACHE_API).then((cache) => cache.put(req, clone));
+          }
+          return res;
         })
+        .catch(() => caches.match(req).then((cached) => cached || new Response(JSON.stringify({ success: false, error: 'Hors ligne' }), { headers: { 'Content-Type': 'application/json' } })))
     );
     return;
   }
 
-  // --- STRATÉGIE 3 : Network First pour les pages HTML (navigation) ---
-  if (req.mode === 'navigate' || req.destination === 'document') {
+  // --- Fichiers statiques (CSS, JS, images, fonts) : Cache First ---
+  if (req.destination === 'style' || req.destination === 'script' || req.destination === 'image' ||
+      url.pathname.match(/\.(css|js|png|jpg|jpeg|svg|ico|woff2?|gif)$/)) {
     event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const clone = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+      caches.match(req).then((cached) => {
+        if (cached) return cached;
+        return fetch(req).then((res) => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE_STATIC).then((cache) => cache.put(req, clone));
+          }
           return res;
-        })
-        .catch(() => caches.match(req).then((cached) => cached || caches.match('/offline.html')))
+        });
+      })
+    );
+    return;
+  }
+
+  // --- Pages HTML : Stale While Revalidate (afficher cache immédiatement, MAJ en arrière-plan) ---
+  if (req.mode === 'navigate' || req.destination === 'document' || url.pathname.endsWith('.html')) {
+    event.respondWith(
+      caches.open(CACHE_PAGES).then((cache) => {
+        return cache.match(req).then((cached) => {
+          const fetchPromise = fetch(req).then((res) => {
+            if (res.ok) cache.put(req, res.clone());
+            return res;
+          }).catch(() => cached || caches.match('/offline.html'));
+          return cached || fetchPromise;
+        });
+      })
     );
     return;
   }
 });
 
-// ===== MESSAGE : forcer la mise à jour =====
+// ===== MESSAGE =====
 self.addEventListener('message', (event) => {
   if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
