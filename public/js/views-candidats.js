@@ -160,7 +160,7 @@ async function openExamens() {
           return `<tr>
             <td><b>${esc(e.type_examen)}</b><br><span class="text-muted" style="font-size:0.82rem;">${formatDateFR(e.date_examen)}</span></td>
             <td>${esc(e.lieu || '—')}</td>
-            <td>${esc(e.inspecteur_nom || '—')}<br><span class="text-muted" style="font-size:0.78rem;">${esc(e.inspecteur_contact || '')}</span></td>
+            <td>${e.inspecteur_nom && e.inspecteur_nom !== 'À définir' ? `${esc(e.inspecteur_nom)}<br><span class="text-muted" style="font-size:0.78rem;">${esc(e.inspecteur_contact || '')}</span>` : '<span class="text-muted">—</span>'}</td>
             <td>${badge}</td>
             <td><div class="flex gap-8" style="flex-wrap:wrap;">
               ${toggleBtn}
