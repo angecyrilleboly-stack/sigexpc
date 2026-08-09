@@ -16,23 +16,24 @@ function fmtDateFR(d) {
 function cleanCat(c) { return String(c || '').replace(/Catégorie/i, '').trim() || 'ABCDE'; }
 function esc(s) { return String(s || '').replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
 
-// Base CSS commune pour les documents officiels
+// Base CSS commune pour les documents officiels — style SIGEXPC professionnel
 const DOC_CSS = `
-  body { font-family: 'Times New Roman', Times, serif; margin: 0; padding: 25px; color: #000; }
-  .header-table { width: 100%; font-size: 12px; font-weight: bold; margin-bottom: 18px; text-align: center; }
+  body { font-family: 'Times New Roman', Times, serif; margin: 0; padding: 30px; color: #000; line-height: 1.4; }
+  .header-table { width: 100%; font-size: 11px; font-weight: bold; margin-bottom: 22px; text-align: center; border-bottom: 2px solid #1e3a8a; padding-bottom: 12px; }
   .header-table td { width: 50%; vertical-align: top; padding: 5px; }
-  .title-container { text-align: center; margin: 12px 0 22px; }
-  .title { font-size: 19px; font-weight: bold; border: 2px solid black; padding: 9px 18px; display: inline-block; text-transform: uppercase; }
-  .info-section { font-size: 12px; margin-bottom: 14px; font-weight: bold; line-height: 1.5; text-transform: uppercase; }
-  .summary-section { font-size: 11px; margin-bottom: 18px; padding: 10px; border: 1px dashed black; background: #f8fafc; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .title-container { text-align: center; margin: 18px 0 26px; }
+  .title { font-size: 17px; font-weight: bold; border: 3px double #1e3a8a; padding: 12px 28px; display: inline-block; text-transform: uppercase; letter-spacing: 1.5px; background: #f0f4ff; -webkit-print-color-adjust: exact; print-color-adjust: exact; border-radius: 4px; }
+  .info-section { font-size: 11px; margin-bottom: 16px; font-weight: bold; line-height: 1.6; text-transform: uppercase; padding: 10px 14px; background: #f8fafc; border-left: 4px solid #1e3a8a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .summary-section { font-size: 10px; margin-bottom: 20px; padding: 14px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .summary-table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
-  .summary-table td { padding: 4px; border-bottom: 1px dotted #ccc; }
-  .cand-table { width: 100%; border-collapse: collapse; margin-bottom: 28px; font-size: 10px; }
-  .cand-table th, .cand-table td { border: 1px solid black; padding: 6px 5px; text-align: left; }
-  .cand-table th { background: #808080; color: black; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .footer-table { width: 100%; text-align: center; font-size: 12px; font-weight: bold; margin-top: 38px; }
-  .footer-table td { width: 50%; }
-  @media print { body { padding: 0; } .no-print { display: none; } }
+  .summary-table td { padding: 5px 8px; border-bottom: 1px dotted #cbd5e1; }
+  .cand-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 9.5px; }
+  .cand-table th { border: 1px solid #1e3a8a; padding: 8px 6px; text-align: center; background: #1e3a8a; color: #fff; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .cand-table td { border: 1px solid #999; padding: 6px 6px; text-align: left; }
+  .cand-table tr:nth-child(even) td { background: #f8fafc; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .footer-table { width: 100%; text-align: center; font-size: 11px; font-weight: bold; margin-top: 45px; }
+  .footer-table td { width: 50%; vertical-align: top; }
+  @media print { body { padding: 15px; } .no-print { display: none; } }
 `;
 
 function headerHTML(regionNom) {
@@ -281,26 +282,26 @@ router.get('/compte-rendu/:idExamen', requireAuth, requireRole('REGION', 'STTC',
     const r = resp[0] || {};
 
     const CR_CSS = DOC_CSS + `
-      .title { text-align:center;font-size:16px;font-weight:bold;text-decoration:underline;margin:18px 0 28px; }
-      .text-content { line-height:1.8;text-align:justify;margin-bottom:28px;font-size:14px; }
-      .stats-table { width:100%;border-collapse:collapse;margin-bottom:28px;font-size:13px;text-align:center; }
-      .stats-table th, .stats-table td { border:1px solid black;padding:10px; }
-      .stats-table th { background:#f1f5f9;font-weight:bold; }
+      .cr-text { line-height:1.7;text-align:justify;margin-bottom:24px;font-size:12px; }
+      .stats-table { width:100%;border-collapse:collapse;margin-bottom:24px;font-size:11px;text-align:center; }
+      .stats-table th { border:1px solid #1e3a8a;padding:8px;background:#1e3a8a;color:#fff;text-transform:uppercase;font-size:9px;-webkit-print-color-adjust:exact;print-color-adjust:exact; }
+      .stats-table td { border:1px solid #999;padding:10px;font-weight:bold;font-size:14px; }
+      .stats-table tr:nth-child(even) td { background:#f8fafc;-webkit-print-color-adjust:exact;print-color-adjust:exact; }
     `;
 
-    let body = `<div class="title">COMPTE RENDU DES EXAMENS THÉORIQUES ET PRATIQUES DU PERMIS DE CONDUIRE</div>`;
-    body += `<div class="text-content">Les examens de conduite et de code se sont déroulés du <b>${esc(fmtDateFR(exam.date_examen))}</b> au <b>${esc(codeExam ? fmtDateFR(codeExam.date_examen) : 'N/A')}</b> à <b>${esc(exam.lieu || 'À définir')}</b>.<br><br>`;
+    let body = `<div class="title-container"><div class="title">COMPTE RENDU DES EXAMENS</div></div>`;
+    body += `<div class="cr-text">Les examens de conduite et de code se sont déroulés du <b>${esc(fmtDateFR(exam.date_examen))}</b> au <b>${esc(codeExam ? fmtDateFR(codeExam.date_examen) : 'N/A')}</b> à <b>${esc(exam.lieu || 'À définir')}</b>.<br><br>`;
     body += `Concernant la phase de code et de conduite nous avons enregistré la participation de <b>${aes.length}</b> auto-écoles à savoir : <b>${esc(aeListStr)}</b>.</div>`;
-    body += `<p style="font-weight:bold;font-size:14px;text-decoration:underline;">Ci-dessous le tableau récapitulatif de l'examen théorique et pratique :</p>`;
+    body += `<p style="font-weight:bold;font-size:11px;text-transform:uppercase;margin-bottom:10px;">Tableau récapitulatif :</p>`;
     body += `<table class="stats-table">
-      <tr><th colspan="3" style="background:#808080;color:black;-webkit-print-color-adjust:exact;print-color-adjust:exact;">Bordereaux de code : ${statsCode.total} candidats</th><th colspan="3" style="background:#808080;color:black;-webkit-print-color-adjust:exact;print-color-adjust:exact;">Bordereaux de conduite : ${statsConduite.total} candidats</th></tr>
+      <tr><th colspan="3">Code : ${statsCode.total} candidats</th><th colspan="3">Conduite : ${statsConduite.total} candidats</th></tr>
       <tr><th>Absents & N.E.</th><th>Aptes</th><th>Inaptes</th><th>Absents & N.E.</th><th>Aptes</th><th>Inaptes</th></tr>
-      <tr><td style="font-weight:bold;font-size:16px;">${statsCode.absentsNE}</td><td style="font-weight:bold;font-size:16px;">${statsCode.aptes}</td><td style="font-weight:bold;font-size:16px;">${statsCode.inaptes}</td><td style="font-weight:bold;font-size:16px;">${statsConduite.absentsNE}</td><td style="font-weight:bold;font-size:16px;">${statsConduite.aptes}</td><td style="font-weight:bold;font-size:16px;">${statsConduite.inaptes}</td></tr>
+      <tr><td>${statsCode.absentsNE}</td><td style="color:#059669;">${statsCode.aptes}</td><td style="color:#dc2626;">${statsCode.inaptes}</td><td>${statsConduite.absentsNE}</td><td style="color:#059669;">${statsConduite.aptes}</td><td style="color:#dc2626;">${statsConduite.inaptes}</td></tr>
     </table>`;
-    body += `<div class="text-content">Notons que dans l'ensemble, les examens se sont bien déroulés. Aucun dysfonctionnement majeur n'a été signalé.</div>`;
+    body += `<div class="cr-text">Notons que dans l'ensemble, les examens se sont bien déroulés. Aucun dysfonctionnement majeur n'a été signalé.</div>`;
     body += `<table class="footer-table"><tr>
-      <td><b>Chef de Service TTC (STTC)</b><br><br><br><br><br><b style="text-transform:uppercase;">${esc(r.chef_sttc || '..........')}</b></td>
-      <td><b>Coordonnateur des examens du permis de conduire</b><br><br><br><br><br><b style="text-transform:uppercase;">${esc(r.coordonnateur || '..........')}</b></td>
+      <td style="text-align:center;"><b style="text-transform:uppercase;font-size:10px;">Chef de Service TTC (STTC)</b><br><br><br><br><br><b style="text-transform:uppercase;">${esc(r.chef_sttc || '..........')}</b></td>
+      <td style="text-align:center;"><b style="text-transform:uppercase;font-size:10px;">Coordonnateur des examens</b><br><br><br><br><br><b style="text-transform:uppercase;">${esc(r.coordonnateur || '..........')}</b></td>
     </tr></table>`;
 
     res.send(`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Compte Rendu</title><style>${CR_CSS}</style></head><body>${PRINT_BAR}${headerHTML(regionNom)}${body}</body></html>`);

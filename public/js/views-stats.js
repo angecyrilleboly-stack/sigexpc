@@ -391,28 +391,32 @@ async function previewReport() {
   const tauxReussite = totalCandidats > 0 ? ((totalAdmis / totalCandidats) * 100).toFixed(2) : '0.00';
   const currentYear = new Date().getFullYear();
   const html = `<div id="pdfContentToPrint" style="font-family:'Times New Roman',Times,serif;color:#000;line-height:1.5;">
-    <table style="width:100%;font-size:12px;font-weight:bold;margin-bottom:20px;text-align:center;border:none;">
+    <table style="width:100%;font-size:11px;font-weight:bold;margin-bottom:18px;text-align:center;border-bottom:2px solid #1e3a8a;padding-bottom:12px;">
       <tr>
         <td style="width:50%;vertical-align:top;padding:5px;">Direction Générale des Transports<br>Terrestres et de la Circulation<br>-------------<br>${esc(regionDisplay)}</td>
         <td style="width:50%;vertical-align:top;padding:5px;">république de côte d'ivoire<br>union - discipline - travail<br>-------------</td>
       </tr>
     </table>
-    <h2 style="text-align:center;text-decoration:underline;font-size:18px;margin-top:30px;margin-bottom:30px;">rapport du ${periodLabel.toLowerCase()} ${currentYear}</h2>
-    <div style="font-size:14px;text-align:justify;">
+    <div style="text-align:center;margin:22px 0 30px;">
+      <div style="font-size:16px;font-weight:bold;border:3px double #1e3a8a;padding:12px 28px;display:inline-block;text-transform:uppercase;letter-spacing:1.5px;background:#f0f4ff;border-radius:4px;">RAPPORT D'ACTIVITÉ</div>
+      <div style="font-size:12px;margin-top:10px;font-weight:bold;text-transform:uppercase;letter-spacing:1px;">${periodLabel} ${currentYear}</div>
+    </div>
+    <div style="font-size:13px;text-align:justify;">
       <p>le présent document constitue le rapport officiel d'évaluation des candidats de l'auto-école <b>${esc((autoEcoleNom || (USER && USER.nom) || '').toUpperCase())}</b> aux examens d'obtention du permis de conduire, pour la période correspondant au <b>${periodLabel.toLowerCase()}</b> de l'année <b>${currentYear}</b>.</p>
       <p>au cours de cette période, notre établissement a présenté un effectif global de <b>${totalCandidats}</b> candidat(s) aux différentes sessions d'examens théoriques (code) et pratiques (conduite). à l'issue des délibérations, les résultats statistiques se répartissent de la manière suivante :</p>
-      <table style="width:100%;border-collapse:collapse;margin-top:20px;margin-bottom:20px;">
-        <tr><td style="border:1px solid #000;padding:8px;">candidats déclarés <b>aptes à la conduite</b> (admis)</td><td style="border:1px solid #000;padding:8px;text-align:center;font-weight:bold;">${apteCond}</td></tr>
-        <tr><td style="border:1px solid #000;padding:8px;">candidats déclarés <b>aptes au code</b></td><td style="border:1px solid #000;padding:8px;text-align:center;font-weight:bold;">${apteCode}</td></tr>
-        <tr><td style="border:1px solid #000;padding:8px;">candidats déclarés <b>inaptes</b> (ajournés)</td><td style="border:1px solid #000;padding:8px;text-align:center;font-weight:bold;">${inapte}</td></tr>
-        <tr><td style="border:1px solid #000;padding:8px;">candidats <b>absents</b></td><td style="border:1px solid #000;padding:8px;text-align:center;font-weight:bold;">${absent}</td></tr>
-        <tr><td style="border:1px solid #000;padding:8px;">candidats <b>non évalués</b></td><td style="border:1px solid #000;padding:8px;text-align:center;font-weight:bold;">${ne}</td></tr>
+      <table style="width:100%;border-collapse:collapse;margin-top:18px;margin-bottom:18px;font-size:12px;">
+        <tr style="background:#1e3a8a;color:#fff;"><th style="border:1px solid #1e3a8a;padding:8px;text-align:left;font-size:10px;text-transform:uppercase;">Résultat</th><th style="border:1px solid #1e3a8a;padding:8px;text-align:center;font-size:10px;text-transform:uppercase;">Nombre</th></tr>
+        <tr><td style="border:1px solid #999;padding:7px;">candidats déclarés <b>aptes à la conduite</b> (admis)</td><td style="border:1px solid #999;padding:7px;text-align:center;font-weight:bold;">${apteCond}</td></tr>
+        <tr style="background:#f8fafc;"><td style="border:1px solid #999;padding:7px;">candidats déclarés <b>aptes au code</b></td><td style="border:1px solid #999;padding:7px;text-align:center;font-weight:bold;">${apteCode}</td></tr>
+        <tr><td style="border:1px solid #999;padding:7px;">candidats déclarés <b>inaptes</b> (ajournés)</td><td style="border:1px solid #999;padding:7px;text-align:center;font-weight:bold;">${inapte}</td></tr>
+        <tr style="background:#f8fafc;"><td style="border:1px solid #999;padding:7px;">candidats <b>absents</b></td><td style="border:1px solid #999;padding:7px;text-align:center;font-weight:bold;">${absent}</td></tr>
+        <tr><td style="border:1px solid #999;padding:7px;">candidats <b>non évalués</b></td><td style="border:1px solid #999;padding:7px;text-align:center;font-weight:bold;">${ne}</td></tr>
       </table>
       <p>le taux de réussite cumulé (aptes conduite et code) pour cet exercice s'établit donc à <b>${tauxReussite} %</b>.</p>
-      <p style="margin-top:40px;">fait pour servir et valoir ce que de droit.</p>
+      <p style="margin-top:35px;">fait pour servir et valoir ce que de droit.</p>
     </div>
-    <table style="width:100%;border:none;margin-top:60px;">
-      <tr><td style="width:50%;border:none;"></td><td style="width:50%;text-align:center;border:none;"><p style="margin-bottom:60px;"><b>le responsable de l'auto-école</b></p></td></tr>
+    <table style="width:100%;border:none;margin-top:55px;">
+      <tr><td style="width:50%;border:none;"></td><td style="width:50%;text-align:center;border:none;"><p style="margin-bottom:55px;font-weight:bold;text-transform:uppercase;font-size:11px;">le responsable de l'auto-école</p></td></tr>
     </table>
   </div>`;
   document.getElementById('reportPreviewArea').innerHTML = html;
