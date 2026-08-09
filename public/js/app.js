@@ -207,6 +207,7 @@ function buildMenu() {
       html += navItem('agents', 'fa-user-shield', 'Agents Vérificateurs');
       html += navItem('sttc-users', 'fa-users-cog', 'Agents STTC');
       html += navItem('responsables', 'fa-user-tie', 'Signataires');
+      html += navItem('config', 'fa-gear', 'Configuration');
     } else if (r === 'AUTO_ECOLE') {
       html += sectionTitle('Gestion');
       html += navItem('candidats', 'fa-users', 'Candidats');
@@ -269,6 +270,7 @@ async function navTo(el, target) {
       'sttc-users': openSTTCUsers,
       'centres': openCentres,
       'responsables': openResponsables,
+      'config': openConfigRegion,
       'candidats': openCandidats,
       'inscriptions': openInscriptions,
       'deliberes-ae': openDeliberesAE,

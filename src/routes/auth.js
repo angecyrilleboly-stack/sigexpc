@@ -176,4 +176,66 @@ router.post('/password', async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, msg: err.message }); }
 });
 
+// ----------------------------------------------------------------------------
+// GET /api/auth/config-region - Récupérer les infos de configuration REGION
+// ----------------------------------------------------------------------------
+router.get('/config-region', async (req, res) => {
+  try {
+    const u = req.session && req.session.user;
+    if (!u || u.role !== 'REGION') return res.status(403).json({ success: false, msg: 'Accès refusé.' });
+    const idRegion = u.idRegion || u.id;
+    const [dr] = await pool.query('SELECT admin_email, admin_nom, whatsapp FROM directions_regionales WHERE id = ?', [idRegion]);
+    const [pr] = await pool.query('SELECT directeur_regional, directeur_email, directeur_whatsapp FROM parametres_region WHERE id_region = ?', [idRegion]);
+    res.json({
+      success: true,
+      info: {
+        email: dr[0]?.admin_email || '',
+        nom: dr[0]?.admin_nom || '',
+        whatsapp: dr[0]?.whatsapp || '',
+        directeur: pr[0]?.directeur_regional || '',
+        directeurEmail: pr[0]?.directeur_email || '',
+        directeurWhatsapp: pr[0]?.directeur_whatsapp || ''
+      }
+    });
+  } catch (e) { res.status(500).json({ success: false, msg: e.message }); }
+});
+
+// ----------------------------------------------------------------------------
+// POST /api/auth/config-region - Mettre à jour les infos REGION
+// ----------------------------------------------------------------------------
+router.post('/config-region', async (req, res) => {
+  try {
+    const u = req.session && req.session.user;
+    if (!u || u.role !== 'REGION') return res.status(403).json({ success: false, msg: 'Accès refusé.' });
+    const idRegion = u.idRegion || u.id;
+    const { email, nom, whatsapp, directeur, directeurEmail, directeurWhatsapp, oldPass, newPass } = req.body;
+
+    // 1. Mettre à jour les infos de la direction
+    await pool.query('UPDATE directions_regionales SET admin_email = ?, admin_nom = ?, whatsapp = ? WHERE id = ?',
+      [email || null, nom || null, whatsapp || null, idRegion]);
+
+    // 2. Mettre à jour les infos du directeur (parametres_region)
+    const [exist] = await pool.query('SELECT id_region FROM parametres_region WHERE id_region = ?', [idRegion]);
+    if (exist.length) {
+      await pool.query('UPDATE parametres_region SET directeur_regional = ?, directeur_email = ?, directeur_whatsapp = ? WHERE id_region = ?',
+        [directeur || null, directeurEmail || null, directeurWhatsapp || null, idRegion]);
+    } else {
+      await pool.query('INSERT INTO parametres_region (id_region, directeur_regional, directeur_email, directeur_whatsapp) VALUES (?, ?, ?, ?)',
+        [idRegion, directeur || null, directeurEmail || null, directeurWhatsapp || null]);
+    }
+
+    // 3. Changer le mot de passe si demandé
+    if (oldPass && newPass) {
+      const [rows] = await pool.query('SELECT mot_de_passe FROM directions_regionales WHERE id = ?', [idRegion]);
+      if (rows.length && !(await checkPass(oldPass, rows[0].mot_de_passe))) {
+        return res.json({ success: false, msg: "L'ancien mot de passe est incorrect." });
+      }
+      const hash = await bcrypt.hash(newPass, 10);
+      await pool.query('UPDATE directions_regionales SET mot_de_passe = ? WHERE id = ?', [hash, idRegion]);
+    }
+
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ success: false, msg: e.message }); }
+});
+
 module.exports = router;

@@ -433,3 +433,129 @@ async function deleteCentre(id, name) {
   if (res.success) { toast('Supprimé.', 'success'); openCentres(); }
   else toast(res.msg || 'Erreur.', 'error');
 }
+
+// ============================================================================
+//  CONFIGURATION (DIRECTION RÉGIONALE)
+// ============================================================================
+async function openConfigRegion() {
+  const content = document.getElementById('content');
+  document.getElementById('pageTitle').innerText = 'Configuration';
+  content.innerHTML = loaderHTML();
+
+  let info = { email: '', nom: '', whatsapp: '', directeur: '', directeurEmail: '', directeurWhatsapp: '' };
+  try {
+    const res = await fetch('/api/auth/config-region', { credentials: 'include' }).then(r => r.json());
+    if (res.success) info = res.info;
+  } catch (e) {}
+
+  content.innerHTML = `<div class="fade-in">
+    ${setTitle('Configuration', `<button class="btn btn-sm btn-ghost" onclick="openConfigRegion()"><i class="fas fa-sync"></i></button>`)}
+
+    <div class="card" style="margin-bottom:20px;">
+      <div style="padding:18px 25px;border-bottom:1px solid var(--border);">
+        <h3 style="margin:0;font-size:1.05rem;"><i class="fas fa-building" style="color:var(--blue);"></i> Informations de la direction</h3>
+        <p style="margin:5px 0 0;font-size:0.82rem;color:var(--gray);">Coordonnées de votre direction regionale.</p>
+      </div>
+      <div style="padding:25px;">
+        <div class="form-row-grid">
+          <div class="form-group">
+            <label><i class="fas fa-user" style="color:var(--blue);"></i> Nom du responsable</label>
+            <input id="cfgNom" type="text" value="${esc(info.nom || '')}" placeholder="Nom du responsable">
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-envelope" style="color:var(--blue);"></i> Email de la direction</label>
+            <input id="cfgEmail" type="email" value="${esc(info.email || '')}" placeholder="email@direction.ci">
+          </div>
+          <div class="form-group">
+            <label><i class="fab fa-whatsapp" style="color:var(--green);"></i> WhatsApp de la direction</label>
+            <input id="cfgWhatsapp" type="tel" value="${esc(info.whatsapp || '')}" placeholder="+225 07 00 00 00 00">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div style="padding:18px 25px;border-bottom:1px solid var(--border);">
+        <h3 style="margin:0;font-size:1.05rem;"><i class="fas fa-user-tie" style="color:var(--yellow);"></i> Directeur / Directrice regional(e)</h3>
+        <p style="margin:5px 0 0;font-size:0.82rem;color:var(--gray);">Ces informations apparaissent automatiquement sur les bordereaux et documents officiels.</p>
+      </div>
+      <div style="padding:25px;">
+        <div class="form-row-grid">
+          <div class="form-group">
+            <label><i class="fas fa-id-badge" style="color:var(--yellow);"></i> Nom et prenoms</label>
+            <input id="cfgDirecteur" type="text" value="${esc(info.directeur || '')}" placeholder="Ex: DIOMANDE AHMED">
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-envelope" style="color:var(--yellow);"></i> Email du directeur</label>
+            <input id="cfgDirecteurEmail" type="email" value="${esc(info.directeurEmail || '')}" placeholder="directeur@direction.ci">
+          </div>
+          <div class="form-group">
+            <label><i class="fab fa-whatsapp" style="color:var(--green);"></i> WhatsApp du directeur</label>
+            <input id="cfgDirecteurWhatsapp" type="tel" value="${esc(info.directeurWhatsapp || '')}" placeholder="+225 07 00 00 00 00">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px;">
+      <div style="padding:18px 25px;border-bottom:1px solid var(--border);">
+        <h3 style="margin:0;font-size:1.05rem;"><i class="fas fa-lock" style="color:var(--danger);"></i> Securite - Changer le mot de passe</h3>
+        <p style="margin:5px 0 0;font-size:0.82rem;color:var(--gray);">Laissez vide si vous ne souhaitez pas changer le mot de passe.</p>
+      </div>
+      <div style="padding:25px;">
+        <div class="form-row-grid">
+          <div class="form-group">
+            <label><i class="fas fa-key" style="color:var(--danger);"></i> Ancien mot de passe</label>
+            <input id="cfgOldPass" type="password" placeholder="Votre mot de passe actuel">
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-lock" style="color:var(--danger);"></i> Nouveau mot de passe</label>
+            <input id="cfgNewPass" type="password" placeholder="Nouveau mot de passe">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;padding:10px 0 30px;">
+      <button class="btn btn-primary" style="padding:14px 50px;font-size:1.05rem;border-radius:30px;" onclick="saveConfigRegion()">
+        <i class="fas fa-save"></i> ENREGISTRER LES MODIFICATIONS
+      </button>
+    </div>
+  </div>`;
+}
+
+async function saveConfigRegion() {
+  const data = {
+    nom: document.getElementById('cfgNom').value.trim(),
+    email: document.getElementById('cfgEmail').value.trim(),
+    whatsapp: document.getElementById('cfgWhatsapp').value.trim(),
+    directeur: document.getElementById('cfgDirecteur').value.trim(),
+    directeurEmail: document.getElementById('cfgDirecteurEmail').value.trim(),
+    directeurWhatsapp: document.getElementById('cfgDirecteurWhatsapp').value.trim(),
+    oldPass: document.getElementById('cfgOldPass').value,
+    newPass: document.getElementById('cfgNewPass').value
+  };
+
+  if (data.newPass && !data.oldPass) {
+    return toast('Veuillez saisir votre ancien mot de passe.', 'error');
+  }
+
+  try {
+    const res = await fetch('/api/auth/config-region', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(data)
+    }).then(r => r.json());
+
+    if (res.success) {
+      toast('Configuration enregistree avec succes.', 'success');
+      document.getElementById('cfgOldPass').value = '';
+      document.getElementById('cfgNewPass').value = '';
+    } else {
+      toast(res.msg || 'Erreur lors de l\'enregistrement.', 'error');
+    }
+  } catch (e) {
+    toast('Erreur reseau: ' + e.message, 'error');
+  }
+}
