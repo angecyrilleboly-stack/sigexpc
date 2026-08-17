@@ -149,7 +149,7 @@ router.get('/bordereau/:idExamen', requireAuth, requireRole('REGION', 'SUPER_ADM
 });
 
 // ============================================================================
-// BORDEREAU DÉLIBÉRÉ (après résultats)
+// BORDEREAU DÉLIBÉRÉ (après résultats) — ancien style conservé
 // ============================================================================
 router.get('/delibere/:idExamen', requireAuth, async (req, res) => {
   try {
@@ -232,7 +232,17 @@ router.get('/delibere/:idExamen', requireAuth, async (req, res) => {
     });
     body += `</table><table class="footer-table"><tr><td style="width:50%;text-align:center;vertical-align:top;"><div style="margin-bottom:50px;"><b>L'INSPECTEUR</b></div>${inspecteurNom ? `<div style="font-weight:bold;font-size:15px;">${esc(inspecteurNom)}</div>` : ''}</td><td style="width:50%;text-align:center;vertical-align:top;"><div style="margin-bottom:50px;"><b>LE DIRECTEUR REGIONAL</b></div><div style="font-weight:bold;">${esc(directeurNom)}</div></td></tr></table>`;
 
-    res.send(wrapDoc(title, body, regionNom));
+    // Ancien style conservé pour le bordereau délibéré (annule les nouveaux styles)
+    const OLD_STYLE = `<style>
+      .header-table { border-bottom:none; padding-bottom:0; }
+      .title { border: 2px solid black; padding: 9px 18px; background: transparent; border-radius: 0; font-size: 19px; letter-spacing: 0; }
+      .info-section { padding: 0; background: transparent; border-left: none; }
+      .summary-section { border: 1px dashed black; border-radius: 0; background: #f8fafc; }
+      .cand-table th { background: #808080; color: black; text-transform: none; font-size: inherit; }
+      .cand-table tr:nth-child(even) td { background: transparent; }
+      .cand-table th, .cand-table td { border: 1px solid black; }
+    </style>`;
+    res.send(wrapDoc(title, body, regionNom).replace('</head>', OLD_STYLE + '</head>'));
   } catch (e) { res.status(500).send('Erreur: ' + esc(e.message)); }
 });
 
