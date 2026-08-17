@@ -54,12 +54,6 @@
       padding:9px 14px; border-radius:12px; transition:all .25s; white-space:nowrap;
     }
     .nav-links a:hover, .nav-links a.active { color:var(--text); background:rgba(255,255,255,0.07); }
-    .nav-cta {
-      background:linear-gradient(135deg,var(--yellow),var(--orange)) !important;
-      color:#181104 !important; font-weight:800 !important;
-      box-shadow:0 6px 20px rgba(245,165,36,0.35);
-    }
-    .nav-cta:hover { transform:translateY(-2px); box-shadow:0 10px 26px rgba(245,165,36,0.5); background:linear-gradient(135deg,var(--yellow),var(--orange)) !important; }
     .burger { display:none; background:none; border:none; cursor:pointer; padding:8px; }
     .burger span { display:block; width:24px; height:2.5px; background:var(--text); margin:5px 0; border-radius:2px; transition:.3s; }
     @media (max-width: 1120px) {
@@ -73,39 +67,34 @@
       .burger { display:block; }
     }
 
-    /* ============ HERO ============ */
+    /* ============ HERO (contenu en haut : laisse voir le goudron et la voiture) ============ */
     .hero {
       position:relative; z-index:5; min-height:100vh;
-      display:flex; flex-direction:column; align-items:center; justify-content:center;
-      text-align:center; padding:120px 20px 60px; pointer-events:none;
+      display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+      text-align:center; padding:108px 20px 60px; pointer-events:none;
       will-change:transform,opacity;
     }
     .hero > * { pointer-events:auto; }
     .hero-badge {
       display:inline-flex; align-items:center; gap:10px;
       background:rgba(10,14,24,0.55); border:1px solid rgba(245,165,36,0.4);
-      color:var(--yellow); font-size:13px; font-weight:700; letter-spacing:1.5px;
-      padding:9px 20px; border-radius:100px; text-transform:uppercase;
+      color:var(--yellow); font-size:12.5px; font-weight:700; letter-spacing:1.5px;
+      padding:8px 18px; border-radius:100px; text-transform:uppercase;
       backdrop-filter:blur(8px);
       animation:fadeUp 1s .1s both;
     }
     .hero-badge .dot { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 12px var(--green); animation:pulse 2s infinite; }
     .hero h1 {
-      font-family:'Space Grotesk'; font-size:clamp(42px,7.5vw,96px); font-weight:700;
-      line-height:1.02; margin:26px 0 10px; letter-spacing:-2px;
+      font-family:'Space Grotesk'; font-size:clamp(34px,5.5vw,68px); font-weight:700;
+      line-height:1.04; margin:18px 0 8px; letter-spacing:-1.5px;
       animation:fadeUp 1s .25s both;
-      text-shadow:0 10px 40px rgba(0,0,0,0.6);
+      text-shadow:0 8px 34px rgba(0,0,0,0.65);
     }
     .hero h1 .grad {
       background:linear-gradient(100deg,#ffd675,var(--yellow) 40%,var(--orange));
       -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
     }
-    .hero p.sub {
-      color:#dfe7f3; font-size:clamp(16px,2vw,21px); max-width:640px; margin:0 auto;
-      animation:fadeUp 1s .4s both; text-shadow:0 4px 20px rgba(0,0,0,0.7);
-      background:rgba(7,10,18,0.25); backdrop-filter:blur(2px); border-radius:16px; padding:6px 10px;
-    }
-    .hero-ctas { display:flex; gap:14px; margin-top:36px; flex-wrap:wrap; justify-content:center; animation:fadeUp 1s .55s both; }
+    .hero-ctas { display:flex; gap:14px; margin-top:18px; flex-wrap:wrap; justify-content:center; animation:fadeUp 1s .45s both; }
     .btn {
       display:inline-flex; align-items:center; gap:10px; text-decoration:none; font-weight:800;
       padding:16px 30px; border-radius:16px; font-size:15.5px; transition:all .3s;
@@ -115,15 +104,17 @@
     .btn-ghost { background:rgba(10,14,24,0.5); color:var(--text); border:1px solid rgba(255,255,255,0.25); backdrop-filter:blur(8px); }
     .btn-ghost:hover { background:rgba(20,26,44,0.75); transform:translateY(-3px); }
     .scroll-hint {
-      margin-top:64px; color:#dfe7f3; font-size:12px; letter-spacing:3px; text-transform:uppercase;
+      position:absolute; bottom:26px; left:50%; transform:translateX(-50%);
+      color:#dfe7f3; font-size:12px; letter-spacing:3px; text-transform:uppercase;
       display:flex; flex-direction:column; align-items:center; gap:8px; animation:fadeUp 1s .8s both;
+      margin-top:0;
     }
     .mouse { width:26px; height:42px; border:2px solid rgba(255,255,255,0.5); border-radius:14px; position:relative; }
     .mouse::after { content:''; position:absolute; left:50%; top:7px; width:4px; height:8px; background:var(--yellow); border-radius:3px; transform:translateX(-50%); animation:wheel 1.6s infinite; }
 
-    /* Carte permis flottante (parallax souris) */
+    /* Carte permis flottante (parallax souris) — placée sous le titre */
     .permis-float {
-      position:absolute; right:6%; top:15%; width:min(400px,32vw); z-index:4;
+      position:absolute; right:5%; top:31%; width:min(380px,30vw); z-index:4;
       border-radius:20px; overflow:hidden;
       border:1px solid rgba(255,255,255,0.25);
       box-shadow:0 30px 80px rgba(0,0,0,0.6), 0 0 60px rgba(245,165,36,0.12);
@@ -344,7 +335,6 @@
     <a href="#documents">Documents</a>
     <a href="#categories">Catégories</a>
     <a href="/quiz.html">Quiz</a>
-    <a href="/" class="nav-cta">Accéder à la plateforme</a>
   </div>
   <button class="burger" id="burger" aria-label="Menu"><span></span><span></span><span></span></button>
 </nav>
@@ -356,10 +346,8 @@
 <header class="hero" id="top">
   <div class="hero-badge"><span class="dot"></span> République de Côte d'Ivoire · Code &amp; Conduite</div>
   <h1>Votre <span class="grad">permis de conduire</span><br>commence ici</h1>
-  <p class="sub">La plateforme de gestion des examens du permis de conduire : code, conduite, permis à points, dossiers de candidature — tout en un seul endroit.</p>
   <div class="hero-ctas">
-    <a href="/" class="btn btn-primary">🚗 Accéder à la plateforme</a>
-    <a href="/quiz.html" class="btn btn-ghost">📝 Tester le quiz code</a>
+    <a href="/quiz.html" class="btn btn-primary">📝 Tester le quiz code</a>
   </div>
   <div class="scroll-hint"><div class="mouse"></div>Découvrir</div>
   <div class="permis-float" id="permisCard">
