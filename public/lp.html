@@ -3,363 +3,1074 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quiz Code de la Route - SIGEXPC</title>
+  <title>SIGEXPC - Examen du Permis de Conduire | Côte d'Ivoire</title>
+  <meta name="description" content="SIGEXPC - Système de Gestion des Examens du Permis de Conduire en Côte d'Ivoire. Permis à points, infractions, dossiers de candidature et catégories du permis.">
   <link rel="icon" href="/img/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #060810;
-      --surface: #131826;
-      --bg2: #0d1220;
-      --text: #e2e8f0;
-      --muted: #64748b;
-      --yellow: #f59e0b;
+      --bg: #070a12;
+      --surface: #101627;
+      --surface2: #161e33;
+      --text: #eef2fa;
+      --muted: #8b97ad;
+      --yellow: #f5a524;
+      --orange: #f97316;
       --red: #ef4444;
-      --green: #10b981;
+      --green: #22c55e;
       --blue: #3b82f6;
-      --border: rgba(255,255,255,0.08);
+      --ivory: #f7f4ea;
+      --border: rgba(255,255,255,0.09);
+      --radius: 22px;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { background:var(--bg); color:var(--text); font-family:'Outfit',sans-serif; min-height:100vh; }
-    .bg-grid { position:fixed; inset:0; z-index:0; opacity:0.2;
-      background-image: linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px);
-      background-size: 50px 50px; pointer-events:none; }
-    .container { position:relative; z-index:1; max-width:700px; margin:0 auto; padding:20px; }
+    html { scroll-behavior:smooth; }
+    body { background:var(--bg); color:var(--text); font-family:'Outfit',sans-serif; overflow-x:hidden; }
+    ::selection { background:var(--yellow); color:#111; }
 
-    .header { text-align:center; padding:25px 0; }
-    .header img { width:56px; height:56px; border-radius:14px; border:2px solid rgba(245,158,11,0.3); }
-    .header h1 { font-family:'Space Grotesk',sans-serif; font-size:1.6rem; font-weight:700; margin:10px 0 4px; }
-    .header h1 span { color:var(--yellow); }
-    .header p { color:var(--muted); font-size:0.85rem; }
+    /* ============ CANVAS 3D ============ */
+    #hero-3d { position:fixed; inset:0; z-index:0; display:block; will-change:transform; }
+    #hero-3d canvas { display:block; }
 
-    /* START */
-    .start-screen { text-align:center; padding:30px 20px; }
-    .start-screen h2 { font-size:clamp(1.4rem,5vw,2rem); font-weight:800; margin-bottom:12px; line-height:1.3; }
-    .start-screen h2 .grad { background:linear-gradient(135deg,var(--yellow),var(--red)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-    .start-screen .desc { color:var(--muted); font-size:0.95rem; max-width:480px; margin:0 auto 25px; line-height:1.6; }
-    .cats { display:flex; gap:14px; justify-content:center; margin-bottom:25px; flex-wrap:wrap; }
-    .cat-badge { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px 20px; min-width:140px; }
-    .cat-badge .icon { font-size:1.8rem; margin-bottom:6px; }
-    .cat-badge .title { font-weight:700; font-size:0.9rem; }
-    .cat-badge .count { color:var(--muted); font-size:0.75rem; }
-    .btn-start { background:linear-gradient(135deg,var(--yellow),var(--red)); color:#fff; border:none; padding:16px 45px; border-radius:30px; font-size:1.05rem; font-weight:700; cursor:pointer; font-family:inherit; box-shadow:0 8px 25px rgba(245,158,11,0.3); transition:transform 0.2s; }
-    .btn-start:hover { transform:translateY(-3px); }
-
-    /* QUIZ */
-    .quiz-screen { display:none; }
-    .cat-header { text-align:center; margin-bottom:20px; }
-    .cat-label { display:inline-block; padding:6px 18px; border-radius:20px; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; }
-    .cat-label.c1 { background:rgba(245,158,11,0.15); color:var(--yellow); border:1px solid rgba(245,158,11,0.3); }
-    .cat-label.c2 { background:rgba(239,68,68,0.15); color:var(--red); border:1px solid rgba(239,68,68,0.3); }
-    .progress-bar { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
-    .progress-track { flex:1; height:5px; background:var(--surface); border-radius:3px; overflow:hidden; }
-    .progress-fill { height:100%; background:linear-gradient(90deg,var(--yellow),var(--red)); border-radius:3px; transition:width 0.4s; width:0; }
-    .progress-text { font-size:0.78rem; color:var(--muted); white-space:nowrap; }
-    .progress-score { font-family:'Space Grotesk',sans-serif; font-weight:700; color:var(--green); }
-
-    .question-card { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:26px; margin-bottom:16px; animation:slideIn 0.4s; }
-    @keyframes slideIn { from{opacity:0;transform:translateY(15px);} to{opacity:1;transform:translateY(0);} }
-    .q-num-row { display:flex; align-items:center; gap:10px; margin-bottom:15px; }
-    .q-num { width:34px; height:34px; border-radius:10px; background:rgba(245,158,11,0.15); color:var(--yellow); display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:0.85rem; flex-shrink:0; }
-    .q-text { font-size:1.1rem; font-weight:600; line-height:1.5; margin-bottom:18px; }
-    .sign-display { text-align:center; margin-bottom:18px; }
-
-    .options { display:flex; flex-direction:column; gap:9px; }
-    .option { background:var(--bg2); border:2px solid var(--border); border-radius:12px; padding:15px 18px; cursor:pointer; font-family:inherit; font-size:0.98rem; color:var(--text); text-align:left; transition:all 0.2s; display:flex; align-items:center; gap:11px; }
-    .option:hover { border-color:rgba(59,130,246,0.4); background:rgba(59,130,246,0.05); }
-    .option .letter { width:26px; height:26px; border-radius:7px; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.82rem; flex-shrink:0; }
-    .option.correct { border-color:var(--green); background:rgba(16,185,129,0.1); }
-    .option.correct .letter { background:var(--green); color:#fff; }
-    .option.wrong { border-color:var(--red); background:rgba(239,68,68,0.1); }
-    .option.wrong .letter { background:var(--red); color:#fff; }
-    .option.disabled { pointer-events:none; opacity:0.65; }
-
-    .explanation { margin-top:14px; padding:14px; background:rgba(59,130,246,0.08); border-left:3px solid var(--blue); border-radius:8px; font-size:0.88rem; line-height:1.5; color:var(--muted); display:none; }
-    .explanation.show { display:block; animation:fadeIn 0.3s; }
-    .explanation b { color:var(--text); }
-    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
-
-    .btn-next { background:var(--blue); color:#fff; border:none; padding:13px 38px; border-radius:30px; font-size:0.98rem; font-weight:700; cursor:pointer; font-family:inherit; display:none; margin:0 auto; transition:transform 0.2s; }
-    .btn-next.show { display:block; }
-    .btn-next:hover { transform:translateY(-2px); }
-
-    /* RESULT */
-    .result-screen { display:none; text-align:center; padding:25px 20px; }
-    .result-circle { width:130px; height:130px; border-radius:50%; margin:0 auto 22px; display:flex; flex-direction:column; align-items:center; justify-content:center; border:4px solid; }
-    .result-circle.pass { border-color:var(--green); background:rgba(16,185,129,0.1); }
-    .result-circle.fail { border-color:var(--red); background:rgba(239,68,68,0.1); }
-    .result-score { font-family:'Space Grotesk',sans-serif; font-size:2.8rem; font-weight:700; }
-    .result-circle.pass .result-score { color:var(--green); }
-    .result-circle.fail .result-score { color:var(--red); }
-    .result-total { font-size:0.85rem; color:var(--muted); }
-    .result-msg { font-size:1.3rem; font-weight:700; margin-bottom:8px; }
-    .result-detail { color:var(--muted); margin-bottom:25px; font-size:0.92rem; }
-    .btn-retry { background:var(--surface); color:var(--text); border:2px solid var(--border); padding:13px 32px; border-radius:30px; font-size:0.98rem; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s; }
-    .btn-retry:hover { border-color:var(--yellow); }
-
-    .review-section { margin-top:25px; text-align:left; }
-    .review-title { font-size:1.05rem; font-weight:700; margin-bottom:12px; text-align:center; }
-    .review-item { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:10px; }
-    .review-q { font-size:0.88rem; font-weight:600; margin-bottom:6px; }
-    .review-a { font-size:0.82rem; }
-    .review-a .ok { color:var(--green); font-weight:600; }
-    .review-a .ko { color:var(--red); font-weight:600; }
-
-    @media(max-width:540px) {
-      .question-card { padding:20px; }
-      .q-text { font-size:1rem; }
-      .option { padding:13px 15px; font-size:0.92rem; }
-      .cats { gap:10px; }
-      .cat-badge { min-width:120px; padding:12px 16px; }
+    /* ============ NAV ============ */
+    .nav {
+      position:fixed; top:0; left:0; right:0; z-index:100;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 28px;
+      background:rgba(7,10,18,0.55);
+      backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+      border-bottom:1px solid var(--border);
+      transition:background .4s;
     }
+    .nav.scrolled { background:rgba(7,10,18,0.92); }
+    .brand { display:flex; align-items:center; gap:12px; text-decoration:none; }
+    .brand img { width:42px; height:42px; border-radius:12px; border:2px solid rgba(245,165,36,.45); }
+    .brand-txt b { font-family:'Space Grotesk'; font-size:19px; letter-spacing:1px; color:var(--text); display:block; line-height:1; }
+    .brand-txt span { font-size:10.5px; color:var(--yellow); letter-spacing:2.5px; text-transform:uppercase; }
+    .nav-links { display:flex; gap:6px; align-items:center; }
+    .nav-links a {
+      color:var(--muted); text-decoration:none; font-size:14px; font-weight:600;
+      padding:9px 14px; border-radius:12px; transition:all .25s; white-space:nowrap;
+    }
+    .nav-links a:hover, .nav-links a.active { color:var(--text); background:rgba(255,255,255,0.07); }
+    .nav-cta {
+      background:linear-gradient(135deg,var(--yellow),var(--orange)) !important;
+      color:#181104 !important; font-weight:800 !important;
+      box-shadow:0 6px 20px rgba(245,165,36,0.35);
+    }
+    .nav-cta:hover { transform:translateY(-2px); box-shadow:0 10px 26px rgba(245,165,36,0.5); background:linear-gradient(135deg,var(--yellow),var(--orange)) !important; }
+    .burger { display:none; background:none; border:none; cursor:pointer; padding:8px; }
+    .burger span { display:block; width:24px; height:2.5px; background:var(--text); margin:5px 0; border-radius:2px; transition:.3s; }
+    @media (max-width: 1120px) {
+      .nav-links {
+        position:fixed; top:69px; right:0; left:0; flex-direction:column; align-items:stretch;
+        background:rgba(7,10,18,0.97); backdrop-filter:blur(20px);
+        border-bottom:1px solid var(--border); padding:14px 20px 22px; gap:4px;
+        transform:translateY(-130%); transition:transform .35s ease;
+      }
+      .nav-links.open { transform:translateY(0); }
+      .burger { display:block; }
+    }
+
+    /* ============ HERO ============ */
+    .hero {
+      position:relative; z-index:5; min-height:100vh;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; padding:120px 20px 60px; pointer-events:none;
+      will-change:transform,opacity;
+    }
+    .hero > * { pointer-events:auto; }
+    .hero-badge {
+      display:inline-flex; align-items:center; gap:10px;
+      background:rgba(10,14,24,0.55); border:1px solid rgba(245,165,36,0.4);
+      color:var(--yellow); font-size:13px; font-weight:700; letter-spacing:1.5px;
+      padding:9px 20px; border-radius:100px; text-transform:uppercase;
+      backdrop-filter:blur(8px);
+      animation:fadeUp 1s .1s both;
+    }
+    .hero-badge .dot { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 12px var(--green); animation:pulse 2s infinite; }
+    .hero h1 {
+      font-family:'Space Grotesk'; font-size:clamp(42px,7.5vw,96px); font-weight:700;
+      line-height:1.02; margin:26px 0 10px; letter-spacing:-2px;
+      animation:fadeUp 1s .25s both;
+      text-shadow:0 10px 40px rgba(0,0,0,0.6);
+    }
+    .hero h1 .grad {
+      background:linear-gradient(100deg,#ffd675,var(--yellow) 40%,var(--orange));
+      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .hero p.sub {
+      color:#dfe7f3; font-size:clamp(16px,2vw,21px); max-width:640px; margin:0 auto;
+      animation:fadeUp 1s .4s both; text-shadow:0 4px 20px rgba(0,0,0,0.7);
+      background:rgba(7,10,18,0.25); backdrop-filter:blur(2px); border-radius:16px; padding:6px 10px;
+    }
+    .hero-ctas { display:flex; gap:14px; margin-top:36px; flex-wrap:wrap; justify-content:center; animation:fadeUp 1s .55s both; }
+    .btn {
+      display:inline-flex; align-items:center; gap:10px; text-decoration:none; font-weight:800;
+      padding:16px 30px; border-radius:16px; font-size:15.5px; transition:all .3s;
+    }
+    .btn-primary { background:linear-gradient(135deg,var(--yellow),var(--orange)); color:#181104; box-shadow:0 10px 30px rgba(249,115,22,0.4); }
+    .btn-primary:hover { transform:translateY(-3px) scale(1.02); box-shadow:0 16px 40px rgba(249,115,22,0.55); }
+    .btn-ghost { background:rgba(10,14,24,0.5); color:var(--text); border:1px solid rgba(255,255,255,0.25); backdrop-filter:blur(8px); }
+    .btn-ghost:hover { background:rgba(20,26,44,0.75); transform:translateY(-3px); }
+    .scroll-hint {
+      margin-top:64px; color:#dfe7f3; font-size:12px; letter-spacing:3px; text-transform:uppercase;
+      display:flex; flex-direction:column; align-items:center; gap:8px; animation:fadeUp 1s .8s both;
+    }
+    .mouse { width:26px; height:42px; border:2px solid rgba(255,255,255,0.5); border-radius:14px; position:relative; }
+    .mouse::after { content:''; position:absolute; left:50%; top:7px; width:4px; height:8px; background:var(--yellow); border-radius:3px; transform:translateX(-50%); animation:wheel 1.6s infinite; }
+
+    /* Carte permis flottante (parallax souris) */
+    .permis-float {
+      position:absolute; right:6%; top:15%; width:min(400px,32vw); z-index:4;
+      border-radius:20px; overflow:hidden;
+      border:1px solid rgba(255,255,255,0.25);
+      box-shadow:0 30px 80px rgba(0,0,0,0.6), 0 0 60px rgba(245,165,36,0.12);
+      transform:rotate(4deg); will-change:transform;
+      animation:cardIn 1.4s .5s both;
+    }
+    .permis-float img { display:block; width:100%; }
+    .permis-float .tag {
+      position:absolute; left:14px; bottom:14px; background:rgba(7,10,18,0.85); backdrop-filter:blur(8px);
+      border:1px solid rgba(245,165,36,0.5); color:var(--yellow);
+      font-weight:800; font-size:13px; padding:8px 14px; border-radius:100px; letter-spacing:.5px;
+    }
+    @media (max-width: 900px) { .permis-float { display:none; } }
+
+    /* ============ SECTIONS ============ */
+    main { position:relative; z-index:10; }
+    .section { padding:110px 20px; position:relative; }
+    .wrap { max-width:1180px; margin:0 auto; }
+    .sec-head { text-align:center; margin-bottom:64px; }
+    .sec-tag {
+      display:inline-block; font-size:12px; font-weight:800; letter-spacing:3px; text-transform:uppercase;
+      color:var(--yellow); padding:8px 18px; border-radius:100px;
+      background:rgba(245,165,36,0.1); border:1px solid rgba(245,165,36,0.35); margin-bottom:18px;
+    }
+    .sec-head h2 { font-family:'Space Grotesk'; font-size:clamp(30px,4.5vw,52px); letter-spacing:-1px; line-height:1.1; }
+    .sec-head p { color:var(--muted); max-width:640px; margin:16px auto 0; font-size:17px; }
+
+    /* fond sombre : la page 3D se fond vers le contenu */
+    .panel-bg {
+      background:linear-gradient(180deg, rgba(7,10,18,0) 0%, rgba(7,10,18,0.88) 14%, #070a12 32%, #070a12 100%);
+      margin-top:-30vh; padding-top:calc(30vh + 110px) !important;
+    }
+
+    /* ============ PERMIS À POINTS ============ */
+    .points-hero { display:grid; grid-template-columns:340px 1fr; gap:48px; align-items:center; }
+    @media (max-width:860px) { .points-hero { grid-template-columns:1fr; } }
+    .gauge-card {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      padding:38px 30px; text-align:center; position:relative; overflow:hidden;
+    }
+    .gauge-card::before { content:''; position:absolute; inset:0; background:radial-gradient(circle at 50% 0%, rgba(245,165,36,0.14), transparent 60%); }
+    .gauge-ring { position:relative; width:220px; height:220px; margin:0 auto 18px; }
+    .gauge-ring svg { transform:rotate(-90deg); }
+    .gauge-ring .val {
+      position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    }
+    .gauge-ring .val b { font-family:'Space Grotesk'; font-size:64px; line-height:1; background:linear-gradient(135deg,#ffd675,var(--orange)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+    .gauge-ring .val span { font-size:12px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-top:4px; }
+    .gauge-card h3 { font-size:19px; margin-top:6px; }
+    .gauge-card small { color:var(--muted); display:block; margin-top:8px; line-height:1.6; }
+    .pts-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:16px; }
+    .pt-card {
+      background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:22px;
+      transition:all .3s; position:relative; overflow:hidden;
+    }
+    .pt-card:hover { transform:translateY(-6px); border-color:rgba(245,165,36,0.45); box-shadow:0 18px 40px rgba(0,0,0,0.4); }
+    .pt-card .badge {
+      width:54px; height:54px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+      font-family:'Space Grotesk'; font-weight:700; font-size:21px; margin-bottom:14px;
+    }
+    .pt-card p { font-size:14.5px; color:#c6d0e2; line-height:1.55; }
+    .b1 .badge { background:rgba(34,197,94,0.14); color:#4ade80; border:1px solid rgba(34,197,94,0.3); }
+    .b2 .badge { background:rgba(59,130,246,0.14); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); }
+    .b3 .badge { background:rgba(245,165,36,0.14); color:var(--yellow); border:1px solid rgba(245,165,36,0.3); }
+    .b4 .badge { background:rgba(249,115,22,0.14); color:#fb923c; border:1px solid rgba(249,115,22,0.3); }
+    .b6 .badge { background:rgba(239,68,68,0.14); color:#f87171; border:1px solid rgba(239,68,68,0.35); }
+    .b6 { border-color:rgba(239,68,68,0.35); background:linear-gradient(160deg,var(--surface), rgba(239,68,68,0.06)); }
+
+    /* ============ INFRACTIONS ============ */
+    .inf-table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+    .inf-scroll { overflow-x:auto; }
+    table.inf { width:100%; border-collapse:collapse; min-width:640px; }
+    table.inf th {
+      background:#1a2340; color:var(--text); font-size:12px; letter-spacing:2px; text-transform:uppercase;
+      padding:16px 18px; text-align:left; font-weight:800; border-bottom:1px solid var(--border);
+    }
+    table.inf td { padding:15px 18px; border-bottom:1px solid rgba(255,255,255,0.05); font-size:15px; }
+    table.inf tr { transition:background .2s; }
+    table.inf tr:hover { background:rgba(255,255,255,0.035); }
+    .chip { display:inline-flex; align-items:center; gap:6px; font-family:'Space Grotesk'; font-weight:700; font-size:13px; padding:5px 12px; border-radius:100px; white-space:nowrap; }
+    .chip.c1 { background:rgba(34,197,94,0.13); color:#4ade80; }
+    .chip.c2 { background:rgba(59,130,246,0.13); color:#60a5fa; }
+    .chip.c3 { background:rgba(245,165,36,0.13); color:var(--yellow); }
+    .chip.c4 { background:rgba(249,115,22,0.13); color:#fb923c; }
+    .chip.c6 { background:rgba(239,68,68,0.15); color:#f87171; }
+    .amende { font-family:'Space Grotesk'; font-weight:700; color:#dbe4f3; white-space:nowrap; }
+    .delit { color:#f87171 !important; font-size:13.5px; }
+
+    /* ============ DOSSIERS (tabs) ============ */
+    .tabs { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:40px; }
+    .tab {
+      display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none;
+      background:var(--surface); border:1px solid var(--border); border-radius:16px;
+      padding:14px 22px; font-weight:700; font-size:14.5px; color:var(--muted); transition:all .3s;
+    }
+    .tab .ico { font-size:20px; }
+    .tab:hover { color:var(--text); border-color:rgba(255,255,255,0.2); }
+    .tab.active {
+      background:linear-gradient(135deg,rgba(245,165,36,0.18),rgba(249,115,22,0.12));
+      color:var(--yellow); border-color:rgba(245,165,36,0.5);
+      box-shadow:0 8px 24px rgba(245,165,36,0.15);
+    }
+    .tab-panel { display:none; animation:fadeUp .5s both; }
+    .tab-panel.show { display:grid; grid-template-columns:1fr 1fr; gap:28px; }
+    @media (max-width:860px) { .tab-panel.show { grid-template-columns:1fr; } }
+    .doc-card {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:34px;
+    }
+    .doc-card h3 { font-family:'Space Grotesk'; font-size:22px; margin-bottom:6px; display:flex; align-items:center; gap:12px; }
+    .doc-card .num {
+      width:44px; height:44px; border-radius:13px; background:linear-gradient(135deg,var(--yellow),var(--orange));
+      color:#181104; display:inline-flex; align-items:center; justify-content:center; font-size:19px; flex:none;
+    }
+    .doc-card > small { color:var(--yellow); font-weight:700; letter-spacing:1.5px; text-transform:uppercase; font-size:11px; }
+    ul.checklist { list-style:none; margin-top:20px; display:flex; flex-direction:column; gap:12px; }
+    ul.checklist li {
+      display:flex; gap:13px; align-items:flex-start; background:rgba(255,255,255,0.03);
+      border:1px solid rgba(255,255,255,0.06); padding:14px 16px; border-radius:14px;
+      font-size:14.5px; color:#c9d3e4; line-height:1.5; transition:all .25s;
+    }
+    ul.checklist li:hover { background:rgba(245,165,36,0.07); border-color:rgba(245,165,36,0.3); transform:translateX(5px); }
+    ul.checklist .tick {
+      flex:none; width:24px; height:24px; border-radius:8px; margin-top:1px;
+      background:rgba(34,197,94,0.15); border:1px solid rgba(34,197,94,0.4);
+      display:flex; align-items:center; justify-content:center; color:#4ade80; font-size:13px; font-weight:900;
+    }
+    .doc-note {
+      margin-top:22px; padding:15px 18px; border-radius:14px; font-size:13.5px; line-height:1.6;
+      background:rgba(59,130,246,0.09); border:1px solid rgba(59,130,246,0.3); color:#9ec2f8;
+    }
+
+    /* ============ DOCUMENTS IDENTIFICATION ============ */
+    .docs-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:22px; }
+    .doc-id {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      overflow:hidden; transition:all .35s;
+    }
+    .doc-id:hover { transform:translateY(-8px); border-color:rgba(245,165,36,0.4); box-shadow:0 24px 50px rgba(0,0,0,0.45); }
+    .doc-id .thumb { height:170px; overflow:hidden; position:relative; background:#1c2440; }
+    .doc-id .thumb img { width:100%; height:100%; object-fit:cover; transition:transform .5s; }
+    .doc-id:hover .thumb img { transform:scale(1.07); }
+    .doc-id .thumb .big-ico {
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:56px;
+      background:linear-gradient(140deg,#1a2340,#101627);
+    }
+    .doc-id .body { padding:22px; }
+    .doc-id h4 { font-size:17px; display:flex; align-items:center; gap:9px; }
+    .doc-id p { color:var(--muted); font-size:13.5px; margin-top:8px; line-height:1.55; }
+
+    /* ============ CATÉGORIES ============ */
+    .cats { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:18px; }
+    .cat-card {
+      position:relative; border-radius:var(--radius); padding:30px 24px; overflow:hidden;
+      background:var(--surface); border:1px solid var(--border); transition:all .35s; cursor:default;
+    }
+    .cat-card:hover { transform:translateY(-8px) scale(1.02); }
+    .cat-card .letter {
+      font-family:'Space Grotesk'; font-size:74px; font-weight:700; line-height:1;
+      background:linear-gradient(135deg,#ffd675,var(--orange)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .cat-card h4 { font-size:16.5px; margin-top:12px; }
+    .cat-card p { color:var(--muted); font-size:13px; margin-top:7px; line-height:1.55; }
+    .cat-card .glow { position:absolute; width:160px; height:160px; border-radius:50%; filter:blur(70px); top:-60px; right:-50px; opacity:.5; transition:.4s; }
+    .cat-card:hover .glow { opacity:.9; }
+    .cg-a .glow { background:rgba(239,68,68,0.4); } .cg-b .glow { background:rgba(59,130,246,0.4); }
+    .cg-c .glow { background:rgba(245,165,36,0.4); } .cg-d .glow { background:rgba(34,197,94,0.4); }
+    .cg-e .glow { background:rgba(168,85,247,0.4); }
+
+    /* ============ QUIZ CTA ============ */
+    .quiz-cta {
+      position:relative; border-radius:28px; overflow:hidden; text-align:center;
+      padding:90px 30px; background:linear-gradient(140deg,#131a2e,#0d1220);
+      border:1px solid rgba(245,165,36,0.3);
+    }
+    .quiz-cta::before {
+      content:''; position:absolute; inset:0;
+      background:radial-gradient(circle at 20% 20%, rgba(245,165,36,0.16), transparent 45%),
+                 radial-gradient(circle at 80% 80%, rgba(59,130,246,0.14), transparent 45%);
+    }
+    .quiz-cta > * { position:relative; }
+    .quiz-cta h2 { font-family:'Space Grotesk'; font-size:clamp(28px,4vw,44px); letter-spacing:-1px; }
+    .quiz-cta p { color:var(--muted); max-width:520px; margin:16px auto 34px; font-size:16.5px; }
+    .signs-row { display:flex; gap:18px; justify-content:center; margin-bottom:34px; flex-wrap:wrap; }
+    .sign3d { width:64px; height:64px; filter:drop-shadow(0 10px 18px rgba(0,0,0,0.5)); animation:floaty 4.5s ease-in-out infinite; }
+
+    /* ============ FOOTER ============ */
+    footer { border-top:1px solid var(--border); padding:44px 20px; text-align:center; background:#05070d; position:relative; z-index:10; }
+    footer img { width:44px; height:44px; border-radius:12px; border:2px solid rgba(245,165,36,.4); }
+    footer .fname { font-family:'Space Grotesk'; font-weight:700; margin-top:12px; }
+    footer p { color:var(--muted); font-size:13px; margin-top:6px; }
+
+    /* panneaux décoratifs parallax latéraux */
+    .side-sign { position:absolute; z-index:1; opacity:0.16; width:110px; pointer-events:none; }
+
+    /* reveal on scroll */
+    .rv { opacity:0; transform:translateY(46px); transition:opacity .8s cubic-bezier(.16,1,.3,1), transform .8s cubic-bezier(.16,1,.3,1); }
+    .rv.in { opacity:1; transform:none; }
+
+    @keyframes fadeUp { from { opacity:0; transform:translateY(30px);} to { opacity:1; transform:none;} }
+    @keyframes pulse { 50% { opacity:.4; } }
+    @keyframes wheel { 0%{opacity:1; transform:translate(-50%,0);} 70%{opacity:0; transform:translate(-50%,14px);} 100%{opacity:0;} }
+    @keyframes cardIn { from { opacity:0; transform:rotate(4deg) translateY(60px) scale(.9);} to { opacity:1; transform:rotate(4deg) translateY(0) scale(1);} }
+    @keyframes floaty { 50% { transform:translateY(-12px) rotate(3deg);} }
   </style>
 </head>
 <body>
-  <div class="bg-grid"></div>
-  <div class="container">
-    <div class="header">
-      <img src="/img/logo.png" alt="SIGEXPC">
-      <h1>Quiz <span>Code de la Route</span></h1>
-      <p>Côte d'Ivoire 2026</p>
-    </div>
 
-    <!-- START -->
-    <div class="start-screen" id="startScreen">
-      <h2>Testez vos connaissances du <span class="grad">code de la route</span></h2>
-      <p class="desc">10 questions réparties en 2 catégories, basées sur le code de la route ivoirien 2026. Correction immédiate après chaque réponse.</p>
-      <div class="cats">
-        <div class="cat-badge">
-          <div class="icon">🚦</div>
-          <div class="title">Panneaux & Vitesse</div>
-          <div class="count">5 questions</div>
+<!-- ================= NAVIGATION ================= -->
+<nav class="nav" id="nav">
+  <a class="brand" href="#top">
+    <img src="/img/logo.png" alt="SIGEXPC">
+    <span class="brand-txt"><b>SIGEXPC</b><span>Permis de conduire · CI</span></span>
+  </a>
+  <div class="nav-links" id="navLinks">
+    <a href="#points">Permis à points</a>
+    <a href="#infractions">Infractions</a>
+    <a href="#dossiers">Dossiers</a>
+    <a href="#documents">Documents</a>
+    <a href="#categories">Catégories</a>
+    <a href="/quiz.html">Quiz</a>
+    <a href="/" class="nav-cta">Accéder à la plateforme</a>
+  </div>
+  <button class="burger" id="burger" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+
+<!-- ================= SCÈNE 3D (boucle 15s) ================= -->
+<div id="hero-3d"></div>
+
+<!-- ================= HERO ================= -->
+<header class="hero" id="top">
+  <div class="hero-badge"><span class="dot"></span> République de Côte d'Ivoire · Code &amp; Conduite</div>
+  <h1>Votre <span class="grad">permis de conduire</span><br>commence ici</h1>
+  <p class="sub">La plateforme de gestion des examens du permis de conduire : code, conduite, permis à points, dossiers de candidature — tout en un seul endroit.</p>
+  <div class="hero-ctas">
+    <a href="/" class="btn btn-primary">🚗 Accéder à la plateforme</a>
+    <a href="/quiz.html" class="btn btn-ghost">📝 Tester le quiz code</a>
+  </div>
+  <div class="scroll-hint"><div class="mouse"></div>Découvrir</div>
+  <div class="permis-float" id="permisCard">
+    <img src="/img/permis_b.jpg" alt="Permis de conduire catégorie B - Côte d'Ivoire">
+    <span class="tag">🏆 Catégorie B — Véhicules légers</span>
+  </div>
+</header>
+
+<main>
+<!-- ================= PERMIS À POINTS ================= -->
+<section class="section panel-bg" id="points">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="sec-tag">Permis à points</span>
+      <h2>Un capital de <span style="color:var(--yellow)">12 points</span></h2>
+      <p>Chaque infraction entame votre capital. À zéro point, le permis est invalidé. Connaître le barème, c'est protéger son permis.</p>
+    </div>
+    <div class="points-hero">
+      <div class="gauge-card rv">
+        <div class="gauge-ring">
+          <svg width="220" height="220" viewBox="0 0 220 220">
+            <circle cx="110" cy="110" r="96" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="17"/>
+            <circle id="gaugeArc" cx="110" cy="110" r="96" fill="none" stroke="url(#gg)" stroke-width="17" stroke-linecap="round" stroke-dasharray="603" stroke-dashoffset="603" style="transition:stroke-dashoffset 2.2s cubic-bezier(.16,1,.3,1)"/>
+            <defs><linearGradient id="gg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#ffd675"/><stop offset="1" stop-color="#f97316"/>
+            </linearGradient></defs>
+          </svg>
+          <div class="val"><b id="gaugeNum">0</b><span>Points</span></div>
         </div>
-        <div class="cat-badge">
-          <div class="icon">📜</div>
-          <div class="title">Permis & Amendes</div>
-          <div class="count">5 questions</div>
-        </div>
+        <h3>Capital initial</h3>
+        <small>Le retrait de la totalité des points entraîne l'invalidation du permis de conduire et l'interdiction de conduire.</small>
       </div>
-      <button class="btn-start" onclick="startQuiz()">Commencer le quiz</button>
-    </div>
-
-    <!-- QUIZ -->
-    <div class="quiz-screen" id="quizScreen">
-      <div class="cat-header"><div class="cat-label" id="catLabel"></div></div>
-      <div class="progress-bar">
-        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-        <div class="progress-text">Q<span id="qCurrent">1</span>/10</div>
-        <div class="progress-score" id="qScore">0</div>
+      <div class="pts-grid">
+        <div class="pt-card b1 rv"><div class="badge">− 1</div><p><b>Excès &lt; 20 km/h</b> et chevauchement d'une ligne continue.</p></div>
+        <div class="pt-card b2 rv"><div class="badge">− 2</div><p><b>Excès 20 à 30 km/h</b>, circulation de nuit sans éclairage.</p></div>
+        <div class="pt-card b3 rv"><div class="badge">− 3</div><p><b>Ceinture, téléphone en main, casque, stop, dépassement dangereux</b>, distances de sécurité, direction sans avertissement.</p></div>
+        <div class="pt-card b4 rv"><div class="badge">− 4</div><p><b>Feu rouge, sens interdit, refus de priorité</b>, excès de 40 à 50 km/h.</p></div>
+        <div class="pt-card b6 rv" style="grid-column:1/-1"><div class="badge">− 6</div><p><b>Excès ≥ 50 km/h, alcoolémie ≥ 0,8 g/l, stupéfiants, délit de fuite, refus d'obtempérer, homicide involontaire</b> — les infractions les plus graves.</p></div>
       </div>
-      <div id="questionArea"></div>
-      <button class="btn-next" id="btnNext" onclick="nextQuestion()">Suivant →</button>
-    </div>
-
-    <!-- RESULT -->
-    <div class="result-screen" id="resultScreen">
-      <div class="result-circle" id="resultCircle">
-        <div class="result-score" id="resultScore">0</div>
-        <div class="result-total">/ 10</div>
-      </div>
-      <div class="result-msg" id="resultMsg"></div>
-      <div class="result-detail" id="resultDetail"></div>
-      <button class="btn-retry" onclick="restartQuiz()">↻ Recommencer</button>
-      <div class="review-section" id="reviewSection"></div>
     </div>
   </div>
+</section>
 
-  <script>
-  // ====================================================================
-  //  CATÉGORIE 1 — PANNEAUX DE SIGNALISATION & VITESSE (5 questions)
-  // ====================================================================
-  // CATÉGORIE 2 — PERMIS À POINTS & AMENDES (5 questions)
-  // ====================================================================
-  const QUESTIONS = [
-    // ===== CAT 1: PANNEAUX & VITESSE =====
-    {
-      cat: 1,
-      q: "Vous voyez ce panneau à une intersection. Que devez-vous faire ?",
-      sign: 'stop',
-      options: ["Ralentir et continuer", "Marquer un arrêt complet puis repartir", "Klaxonner avant de passer", "Mettre les warning et passer"],
-      correct: 1,
-      explanation: "Le panneau <b>STOP</b> impose un <b>arrêt complet</b> du véhicule. Le conducteur doit immobiliser totalement son véhicule, vérifier que la voie est libre, puis repartir."
-    },
-    {
-      cat: 1,
-      q: "Vous circulez sur l'autoroute Abidjan–Yamoussoukro. Quelle est votre vitesse maximale légale ?",
-      sign: null,
-      options: ["100 km/h", "110 km/h", "120 km/h", "130 km/h"],
-      correct: 2,
-      explanation: "Sur autoroute, la limite est de <b>120 km/h</b> pour les véhicules légers. Les poids lourds ont une limite plus basse (90 km/h)."
-    },
-    {
-      cat: 1,
-      q: "Que signifie ce panneau triangulaire inversé (pointe vers le bas) ?",
-      sign: 'yield',
-      options: ["Danger — ralentir fortement", "Cédez le passage aux autres véhicules", "Arrêt obligatoire", "Priorité à vous"],
-      correct: 1,
-      explanation: "Le triangle inversé signifie <b>Cédez le passage</b>. Vous devez ralentir et laisser passer les véhicules qui arrivent avant de vous engager."
-    },
-    {
-      cat: 1,
-      q: "En ville à Abidjan, un panneau rond bleu indique « 50 ». Cela signifie :",
-      sign: null,
-      options: ["Vous devez rouler à exactement 50 km/h", "La vitesse maximale est 50 km/h", "Il reste 50 km jusqu'à la destination", "C'est la route numérotée 50"],
-      correct: 1,
-      explanation: "Un panneau rond à fond bleu avec un chiffre indique la <b>vitesse maximale autorisée</b>. À partir de ce panneau, vous ne devez pas dépasser 50 km/h."
-    },
-    {
-      cat: 1,
-      q: "Sur une route en latérite (piste non goudronnée), quelle est la vitesse maximale autorisée ?",
-      sign: null,
-      options: ["30 km/h", "40 km/h", "50 km/h", "60 km/h"],
-      correct: 1,
-      explanation: "Sur route en latérite, la vitesse est limitée à <b>40 km/h</b> en raison de la poussière, des nids-de-poule et de la visibilité réduite."
-    },
-    // ===== CAT 2: PERMIS À POINTS & AMENDES =====
-    {
-      cat: 2,
-      q: "En Côte d'Ivoire, combien de points possède un permis de conduire ?",
-      sign: null,
-      options: ["6 points", "10 points", "12 points", "15 points"],
-      correct: 2,
-      explanation: "Le permis ivoirien possède <b>12 points</b>. Chaque infraction entraîne un retrait de points. À zéro point, le permis est annulé."
-    },
-    {
-      cat: 2,
-      q: "Vous conduisez en tenant votre téléphone dans la main. Quelle est la sanction ?",
-      sign: null,
-      options: ["Simple avertissement", "Amende sans perte de points", "Amende ET retrait de points de permis", "Rien si c'est un coup rapide"],
-      correct: 2,
-      explanation: "Le téléphone au volant est <b>totalement interdit</b>. C'est une infraction qui entraîne à la fois une <b>amende et un retrait de points</b> sur le permis."
-    },
-    {
-      cat: 2,
-      q: "Quel est le taux d'alcoolémie maximal autorisé au volant en Côte d'Ivoire ?",
-      sign: null,
-      options: ["0,2 g/l de sang", "0,5 g/l de sang", "0,8 g/l de sang", "1,2 g/l de sang"],
-      correct: 2,
-      explanation: "Le taux légal est de <b>0,8 g/l de sang</b>. Au-delà, c'est une infraction sévèrement sanctionnée (amende, retrait de points, voire retrait de permis)."
-    },
-    {
-      cat: 2,
-      q: "Vous oubliez d'attacher votre ceinture de sécurité. C'est :",
-      sign: null,
-      options: ["Légal à l'arrière", "Une contravention de 3ème classe", "Autorisé en ville", "Juste un avertissement verbal"],
-      correct: 1,
-      explanation: "Le non-port de la ceinture est une <b>contravention de 3ème classe</b>, valable pour TOUS les passagers (avant ET arrière). C'est l'une des infractions les plus sanctionnées."
-    },
-    {
-      cat: 2,
-      q: "Depuis 2024, un nouveau système de contrôle s'est développé sur les routes ivoiriennes. De quoi s'agit-il ?",
-      sign: null,
-      options: ["Contrôles par drones", "Vidéo-verbalisation (radars et caméras automatiques)", "Contrôles aléatoires par SMS", "Alcootests obligatoires à domicile"],
-      correct: 1,
-      explanation: "La <b>vidéo-verbalisation</b> (radars et caméras automatiques) est de plus en plus présente. En 2024, plus de <b>2 milliards de FCFA</b> d'amendes ont été collectés. Même sans policier visible, vous pouvez être verbalisé."
-    }
-  ];
+<!-- ================= INFRACTIONS ================= -->
+<section class="section" id="infractions">
+  <img class="side-sign" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,6 94,88 6,88' fill='%23ef4444'/%3E%3C/svg%3E" style="left:3%; top:8%" data-float>
+  <img class="side-sign" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%23ef4444'/%3E%3Crect x='20' y='43' width='60' height='14' fill='white'/%3E%3C/svg%3E" style="right:3%; bottom:12%" data-float>
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="sec-tag">Barème officiel</span>
+      <h2>Infractions &amp; retraits de points</h2>
+      <p>Liste des infractions relatives au retrait de points sur le permis de conduire et les amendes encourues.</p>
+    </div>
+    <div class="inf-table-wrap rv">
+      <div class="inf-scroll">
+        <table class="inf">
+          <thead><tr><th>Infraction</th><th>Points retirés</th><th>Amende</th></tr></thead>
+          <tbody>
+            <tr><td>Dépassement de la vitesse autorisée de moins de 20 km/h</td><td><span class="chip c1">− 1 pt</span></td><td class="amende">3 000 F</td></tr>
+            <tr><td>Chevauchement d'une ligne continue</td><td><span class="chip c1">− 1 pt</span></td><td class="amende">3 000 F</td></tr>
+            <tr><td>Excès de vitesse de 20 à moins de 30 km/h</td><td><span class="chip c2">− 2 pts</span></td><td class="amende">5 000 F</td></tr>
+            <tr><td>Circulation de nuit sans éclairage</td><td><span class="chip c2">− 2 pts</span></td><td class="amende">5 000 F</td></tr>
+            <tr><td>Excès de vitesse de 30 à moins de 40 km/h</td><td><span class="chip c3">− 3 pts</span></td><td class="amende">5 000 F</td></tr>
+            <tr><td>Défaut de port de la ceinture de sécurité</td><td><span class="chip c3">− 3 pts</span></td><td class="amende">3 000 F</td></tr>
+            <tr><td>Usage du téléphone tenu en main pendant la conduite</td><td><span class="chip c3">− 3 pts</span></td><td class="amende">3 000 F</td></tr>
+            <tr><td>Défaut de port du casque (motocycliste)</td><td><span class="chip c3">− 3 pts</span></td><td class="amende">3 000 F</td></tr>
+            <tr><td>Non-respect d'un stop ou d'une ligne d'effet</td><td><span class="chip c3">− 3 pts</span></td><td class="amende">5 000 F</td></tr>
+            <tr><td>Dépassement dangereux</td><td><span class="chip c3">− 3 pts</span></td><td class="amende">10 000 F</td></tr>
+            <tr><td>Non-respect des distances de sécurité</td><td><span class="chip c3">− 3 pts</span></td><td class="amende">10 000 F</td></tr>
+            <tr><td>Changement de direction sans avertissement</td><td><span class="chip c3">− 3 pts</span></td><td class="amende">5 000 F</td></tr>
+            <tr><td>Circulation sur la bande d'arrêt d'urgence</td><td><span class="chip c3">− 3 pts</span></td><td class="amende">5 000 F</td></tr>
+            <tr><td>Excès de vitesse de 40 à moins de 50 km/h</td><td><span class="chip c4">− 4 pts</span></td><td class="amende">10 000 F</td></tr>
+            <tr><td>Non-respect d'un feu rouge</td><td><span class="chip c4">− 4 pts</span></td><td class="amende">12 000 F</td></tr>
+            <tr><td>Circulation en sens interdit</td><td><span class="chip c4">− 4 pts</span></td><td class="amende">15 000 F</td></tr>
+            <tr><td>Refus de priorité</td><td><span class="chip c4">− 4 pts</span></td><td class="amende">12 000 F</td></tr>
+            <tr><td>Excès de vitesse de 50 km/h ou plus</td><td><span class="chip c6">− 6 pts</span></td><td class="amende">15 000 F</td></tr>
+            <tr><td>Conduite en état d'ivresse (≥ 0,8 g/l d'alcoolémie)</td><td><span class="chip c6">− 6 pts</span></td><td class="delit">Délit — retrait du permis</td></tr>
+            <tr><td>Conduite sous l'emprise de stupéfiants</td><td><span class="chip c6">− 6 pts</span></td><td class="delit">Délit — retrait du permis</td></tr>
+            <tr><td>Refus d'obtempérer, délit de fuite</td><td><span class="chip c6">− 6 pts</span></td><td class="delit">Délit — prison + amende</td></tr>
+            <tr><td>Homicide involontaire</td><td><span class="chip c6">− 6 pts</span></td><td class="delit">Délit — prison + amende</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
 
-  // SVG panneaux
-  const SIGNS = {
-    stop: `<svg width="75" height="75" viewBox="0 0 100 100"><polygon points="30,5 70,5 95,30 95,70 70,95 30,95 5,70 5,30" fill="#dc2626" stroke="#fff" stroke-width="5"/><text x="50" y="58" font-family="Arial" font-weight="bold" font-size="22" fill="#fff" text-anchor="middle">STOP</text></svg>`,
-    yield: `<svg width="75" height="75" viewBox="0 0 100 100"><polygon points="10,15 90,15 50,88" fill="#fff" stroke="#dc2626" stroke-width="8"/><polygon points="28,28 72,28 50,68" fill="#dc2626"/></svg>`
-  };
+<!-- ================= DOSSIERS ================= -->
+<section class="section" id="dossiers" style="background:linear-gradient(180deg,transparent,rgba(16,22,39,0.5) 20%,rgba(16,22,39,0.5) 80%,transparent)">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="sec-tag">Constitution des dossiers</span>
+      <h2>Votre dossier en 3 formules</h2>
+      <p>Nouveau permis, duplicata ou échange d'un permis étranger : les pièces à fournir selon la procédure officielle.</p>
+    </div>
+    <div class="tabs rv">
+      <div class="tab active" data-tab="t1"><span class="ico">🆕</span> Nouveau permis</div>
+      <div class="tab" data-tab="t2"><span class="ico">📋</span> Duplicata</div>
+      <div class="tab" data-tab="t3"><span class="ico">🔄</span> Échange permis étranger</div>
+    </div>
 
-  // ====================================================================
-  //  LOGIQUE
-  // ====================================================================
-  let currentQ = 0, score = 0, userAnswers = [];
+    <div class="tab-panel show" id="t1">
+      <div class="doc-card rv">
+        <small>Annexe 1</small>
+        <h3><span class="num">1</span> Demande d'inscription</h3>
+        <ul class="checklist">
+          <li><span class="tick">✓</span><span><b>Demande d'inscription au permis de conduire</b> établie sur un imprimé fourni par l'Administration (fiche visée par le chef de centre ou son représentant)</span></li>
+          <li><span class="tick">✓</span><span><b>Quittance de paiement</b> des frais d'examen</span></li>
+        </ul>
+        <div class="doc-note">ℹ️ La fiche d'inscription est disponible dans toutes les auto-écoles agréées et auprès des centres d'examen.</div>
+      </div>
+      <div class="doc-card rv">
+        <small>Annexe 1 (suite)</small>
+        <h3><span class="num">2</span> Pièces du candidat</h3>
+        <ul class="checklist">
+          <li><span class="tick">✓</span><span><b>Certificat médical</b> d'aptitude physique et mentale</span></li>
+          <li><span class="tick">✓</span><span><b>Pièce d'identité en cours de validité</b> (CNI, passeport ou carte consulaire) + <b>2 photocopies</b></span></li>
+          <li><span class="tick">✓</span><span><b>2 photographies d'identité</b> récentes sur fond bleu</span></li>
+          <li><span class="tick">✓</span><span><b>Certificat de résidence</b></span></li>
+        </ul>
+      </div>
+    </div>
 
-  function startQuiz() {
-    document.getElementById('startScreen').style.display = 'none';
-    document.getElementById('quizScreen').style.display = 'block';
-    currentQ = 0; score = 0; userAnswers = [];
-    showQuestion();
+    <div class="tab-panel" id="t2">
+      <div class="doc-card rv">
+        <small>Annexe 2</small>
+        <h3><span class="num">1</span> En cas de perte, vol ou destruction</h3>
+        <ul class="checklist">
+          <li><span class="tick">✓</span><span><b>Demande de duplicata</b> établie sur un imprimé fourni par l'Administration</span></li>
+          <li><span class="tick">✓</span><span><b>Déclaration de perte, de vol ou de destruction</b> (récépissé ou attestation)</span></li>
+        </ul>
+        <div class="doc-note">ℹ️ La déclaration doit être faite auprès des autorités compétentes (police / gendarmerie).</div>
+      </div>
+      <div class="doc-card rv">
+        <small>Annexe 2 (suite)</small>
+        <h3><span class="num">2</span> Pièces à joindre</h3>
+        <ul class="checklist">
+          <li><span class="tick">✓</span><span><b>Pièce d'identité en cours de validité</b> + <b>2 photocopies</b></span></li>
+          <li><span class="tick">✓</span><span><b>2 photographies d'identité</b> récentes sur fond bleu</span></li>
+          <li><span class="tick">✓</span><span><b>Quittance de paiement</b> des frais de duplicata</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="t3">
+      <div class="doc-card rv">
+        <small>Annexe 3</small>
+        <h3><span class="num">1</span> Le permis à échanger</h3>
+        <ul class="checklist">
+          <li><span class="tick">✓</span><span><b>Demande d'échange de permis</b> sur imprimé de l'Administration</span></li>
+          <li><span class="tick">✓</span><span><b>Permis de conduire étranger</b> — original + photocopie</span></li>
+          <li><span class="tick">✓</span><span><b>Traduction officielle en français</b> du permis étranger, si nécessaire</span></li>
+        </ul>
+      </div>
+      <div class="doc-card rv">
+        <small>Annexe 3 (suite)</small>
+        <h3><span class="num">2</span> Justificatifs du titulaire</h3>
+        <ul class="checklist">
+          <li><span class="tick">✓</span><span><b>Pièce d'identité en cours de validité</b> + <b>2 photocopies</b></span></li>
+          <li><span class="tick">✓</span><span><b>2 photographies d'identité</b> récentes sur fond bleu</span></li>
+          <li><span class="tick">✓</span><span><b>Attestation de résidence</b> en Côte d'Ivoire</span></li>
+          <li><span class="tick">✓</span><span><b>Visa de séjour ou titre de séjour</b> en cours de validité</span></li>
+          <li><span class="tick">✓</span><span><b>Quittance de paiement</b> des frais de conversion</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DOCUMENTS D'IDENTIFICATION ================= -->
+<section class="section" id="documents">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="sec-tag">Annexe 5</span>
+      <h2>Documents d'identification</h2>
+      <p>Les pièces admises pour constituer votre dossier et vous présenter à l'examen.</p>
+    </div>
+    <div class="docs-grid">
+      <div class="doc-id rv">
+        <div class="thumb"><div class="big-ico">🪪</div></div>
+        <div class="body"><h4>Carte Nationale d'Identité</h4><p>Biométrique ou ancienne version, en cours de validité. La pièce d'identité de référence.</p></div>
+      </div>
+      <div class="doc-id rv">
+        <div class="thumb"><div class="big-ico">🛂</div></div>
+        <div class="body"><h4>Passeport</h4><p>Diplomatique, ordinaire ou de service — accepté comme pièce d'identification.</p></div>
+      </div>
+      <div class="doc-id rv">
+        <div class="thumb"><div class="big-ico">🏛️</div></div>
+        <div class="body"><h4>Carte consulaire &amp; carte de séjour</h4><p>Pour les ressortissants étrangers résidant en Côte d'Ivoire.</p></div>
+      </div>
+      <div class="doc-id rv">
+        <div class="thumb"><div class="big-ico">📄</div></div>
+        <div class="body"><h4>Extrait de naissance</h4><p>Pour les mineurs ou à défaut de CNI.</p></div>
+      </div>
+      <div class="doc-id rv">
+        <div class="thumb"><img src="/img/digitaux.jpg" alt="Prise des empreintes digitales"></div>
+        <div class="body"><h4>Empreintes digitales</h4><p>Prise des digitaux obligatoire lors de l'enrôlement du candidat.</p></div>
+      </div>
+      <div class="doc-id rv">
+        <div class="thumb"><img src="/img/cacr.jpg" alt="Certificat d'aptitude à la conduite routière"></div>
+        <div class="body"><h4>CACR</h4><p>Certificat d'Aptitude à la Conduite Routière — délivré après formation dans une auto-école agréée.</p></div>
+      </div>
+      <div class="doc-id rv">
+        <div class="thumb"><img src="/img/ct.jpg" alt="Contrôle technique du véhicule"></div>
+        <div class="body"><h4>Contrôle technique</h4><p>Le véhicule de conduite doit être en règle et présenter un contrôle technique valide.</p></div>
+      </div>
+      <div class="doc-id rv">
+        <div class="thumb"><div class="big-ico">🩺</div></div>
+        <div class="body"><h4>Certificat médical</h4><p>Aptitude physique et mentale à la conduite, délivré par un médecin agréé.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CATÉGORIES + QUIZ ================= -->
+<section class="section" id="categories" style="background:linear-gradient(180deg,transparent,rgba(16,22,39,0.5) 20%,rgba(16,22,39,0.5) 80%,transparent)">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="sec-tag">Annexe 4</span>
+      <h2>Les catégories du permis</h2>
+      <p>Du deux-roues aux ensembles de véhicules, choisissez la catégorie adaptée à votre projet.</p>
+    </div>
+    <div class="cats">
+      <div class="cat-card cg-a rv"><div class="glow"></div><div class="letter">A</div><h4>Motocycles</h4><p>Motocycles avec ou sans side-car, cylindrée supérieure à 50 cm³.</p></div>
+      <div class="cat-card cg-b rv"><div class="glow"></div><div class="letter">B</div><h4>Véhicules légers</h4><p>PTAC ≤ 3,5 tonnes, transportant jusqu'à 8 personnes outre le conducteur.</p></div>
+      <div class="cat-card cg-c rv"><div class="glow"></div><div class="letter">C</div><h4>Poids lourds</h4><p>Véhicules de transport de marchandises de PTAC supérieur à 3,5 tonnes.</p></div>
+      <div class="cat-card cg-d rv"><div class="glow"></div><div class="letter">D</div><h4>Transport de voyageurs</h4><p>Véhicules affectés au transport de plus de 8 places outre le conducteur.</p></div>
+      <div class="cat-card cg-e rv"><div class="glow"></div><div class="letter">E</div><h4>Ensembles de véhicules</h4><p>Voie publique : remorques et semi-remorques articulées au véhicule tracteur.</p></div>
+    </div>
+
+    <div class="quiz-cta rv" style="margin-top:70px">
+      <div class="signs-row">
+        <svg class="sign3d" viewBox="0 0 100 100" style="animation-delay:0s"><polygon points="50,6 94,88 6,88" fill="#ef4444"/><polygon points="50,20 84,84 16,84" fill="#fff"/><text x="50" y="72" font-size="34" text-anchor="middle" font-weight="bold">!</text></svg>
+        <svg class="sign3d" viewBox="0 0 100 100" style="animation-delay:.6s"><circle cx="50" cy="50" r="46" fill="#ef4444"/><circle cx="50" cy="50" r="37" fill="#fff"/><text x="50" y="45" font-size="24" text-anchor="middle" font-weight="bold" fill="#111">50</text><text x="50" y="66" font-size="11" text-anchor="middle" fill="#111">km/h</text></svg>
+        <svg class="sign3d" viewBox="0 0 100 100" style="animation-delay:1.2s"><polygon points="50,10 92,90 8,90" fill="#fff" stroke="#ef4444" stroke-width="10"/></svg>
+        <svg class="sign3d" viewBox="0 0 100 100" style="animation-delay:1.8s"><circle cx="50" cy="50" r="46" fill="#ef4444"/><rect x="20" y="43" width="60" height="14" fill="#fff"/></svg>
+        <svg class="sign3d" viewBox="0 0 100 100" style="animation-delay:2.4s"><rect x="6" y="6" width="88" height="88" rx="10" fill="#ef4444"/><text x="50" y="64" font-size="30" text-anchor="middle" font-weight="bold" fill="#fff">STOP</text></svg>
+      </div>
+      <h2>Prêt pour l'examen du code ?</h2>
+      <p>Testez vos connaissances sur les panneaux de signalisation, les vitesses et le permis à points avec notre quiz interactif.</p>
+      <a href="/quiz.html" class="btn btn-primary">📝 Lancer le quiz gratuit</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <img src="/img/logo.png" alt="SIGEXPC">
+  <div class="fname">SIGEXPC</div>
+  <p>Système de Gestion des Examens du Permis de Conduire — République de Côte d'Ivoire</p>
+  <p style="margin-top:2px">© 2026 SIGEXPC. Tous droits réservés.</p>
+</footer>
+
+<!-- ================= THREE.JS : ROUTE 3D — BOUCLE PARFAITE 15s ================= -->
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+const container = document.getElementById('hero-3d');
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+
+/* ---------- Ciel jour ---------- */
+const skyCanvas = document.createElement('canvas'); skyCanvas.width = 8; skyCanvas.height = 256;
+const skx = skyCanvas.getContext('2d');
+const grad = skx.createLinearGradient(0, 0, 0, 256);
+grad.addColorStop(0, '#2f6fd8'); grad.addColorStop(0.45, '#7db4ee'); grad.addColorStop(0.8, '#cfe6fb'); grad.addColorStop(1, '#eef6fd');
+skx.fillStyle = grad; skx.fillRect(0, 0, 8, 256);
+const sky = new THREE.Mesh(
+  new THREE.SphereGeometry(600, 24, 16),
+  new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(skyCanvas), side: THREE.BackSide })
+);
+scene.add(sky);
+
+const sun = new THREE.Mesh(new THREE.SphereGeometry(16, 20, 20), new THREE.MeshBasicMaterial({ color: 0xfff3c4 }));
+sun.position.set(-110, 150, -320); scene.add(sun);
+const halo = new THREE.Mesh(new THREE.SphereGeometry(32, 20, 20), new THREE.MeshBasicMaterial({ color: 0xffe9a0, transparent:true, opacity:0.28 }));
+halo.position.copy(sun.position); scene.add(halo);
+
+function cloudTexture() {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 128;
+  const x = c.getContext('2d');
+  for (let i = 0; i < 16; i++) {
+    const cx = 30 + Math.random() * 196, cy = 50 + Math.random() * 40, r = 14 + Math.random() * 26;
+    const g = x.createRadialGradient(cx, cy, 2, cx, cy, r);
+    g.addColorStop(0, 'rgba(255,255,255,0.85)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = g; x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill();
   }
+  return new THREE.CanvasTexture(c);
+}
+const clouds = [];
+for (let i = 0; i < 9; i++) {
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTexture(), transparent:true, opacity: 0.5 + Math.random()*0.3, depthWrite:false }));
+  sp.position.set((Math.random()-0.5)*440, 60 + Math.random()*60, -140 - Math.random()*420);
+  sp.scale.set(90 + Math.random()*90, 40 + Math.random()*36, 1);
+  clouds.push(sp); scene.add(sp);
+}
 
-  function showQuestion() {
-    const q = QUESTIONS[currentQ];
-    const letters = ['A','B','C','D'];
+/* ---------- Caméra & lumières ---------- */
+const camera = new THREE.PerspectiveCamera(62, innerWidth/innerHeight, 0.1, 1200);
+camera.position.set(0, 7.5, 14);
+scene.add(new THREE.HemisphereLight(0xbcd8ff, 0x5a6b4a, 1.05));
+const dirLight = new THREE.DirectionalLight(0xfff2d0, 1.2);
+dirLight.position.set(-40, 70, -30); scene.add(dirLight);
 
-    // Catégorie label
-    const lbl = document.getElementById('catLabel');
-    if (q.cat === 1) { lbl.className = 'cat-label c1'; lbl.textContent = '🚦 Panneaux & Vitesse'; }
-    else { lbl.className = 'cat-label c2'; lbl.textContent = '📜 Permis & Amendes'; }
+/* ---------- Route (goudron) ---------- */
+const ROAD_W = 16, SEG_LEN = 30, SEG_COUNT = 14;
+const TOTAL = SEG_LEN * SEG_COUNT; // 420 unités / boucle
 
-    let html = `<div class="question-card">
-      <div class="q-num-row"><div class="q-num">${currentQ + 1}</div></div>
-      <div class="q-text">${q.q}</div>`;
+function asphaltTexture() {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 256;
+  const x = c.getContext('2d');
+  x.fillStyle = '#3c4048'; x.fillRect(0, 0, 256, 256);
+  for (let i = 0; i < 2600; i++) {
+    const g = 40 + Math.random()*50;
+    x.fillStyle = `rgba(${g},${g},${g+4},${0.16 + Math.random()*0.2})`;
+    x.fillRect(Math.random()*256, Math.random()*256, 2, 2);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(3, 90);
+  return t;
+}
+const asphalt = asphaltTexture();
+const road = new THREE.Mesh(
+  new THREE.PlaneGeometry(ROAD_W, TOTAL),
+  new THREE.MeshStandardMaterial({ map: asphalt, roughness: 0.95 })
+);
+road.rotation.x = -Math.PI/2;
+road.position.z = -TOTAL/2 + 20;
+scene.add(road);
 
-    if (q.sign && SIGNS[q.sign]) html += `<div class="sign-display">${SIGNS[q.sign]}</div>`;
+function stripe(w, color) {
+  return new THREE.Mesh(new THREE.PlaneGeometry(w, TOTAL), new THREE.MeshBasicMaterial({ color }));
+}
+const lineL = stripe(0.3, 0xffffff); lineL.rotation.x = -Math.PI/2; lineL.position.set(-ROAD_W/2 + 0.8, 0.02, road.position.z); scene.add(lineL);
+const lineR = stripe(0.3, 0xffffff); lineR.rotation.x = -Math.PI/2; lineR.position.set(ROAD_W/2 - 0.8, 0.02, road.position.z); scene.add(lineR);
 
-    html += `<div class="options">`;
-    q.options.forEach((opt, i) => {
-      html += `<button class="option" id="opt${i}" onclick="selectAnswer(${i})"><div class="letter">${letters[i]}</div><div>${opt}</div></button>`;
+/* Ligne centrale pointillée */
+const dashes = [];
+const dashGeo = new THREE.PlaneGeometry(0.35, 5);
+const dashMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+for (let i = 0; i < Math.ceil(TOTAL/5) + 8; i++) {
+  const d = new THREE.Mesh(dashGeo, dashMat);
+  d.rotation.x = -Math.PI/2;
+  d.position.set(0, 0.02, 16 - i * 5);
+  dashes.push(d); scene.add(d);
+}
+
+/* Passage piéton sur le goudron */
+function zebra() {
+  const g = new THREE.Group();
+  for (let i = -6; i <= 6; i++) {
+    const s = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 6.5), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+    s.rotation.x = -Math.PI/2; s.position.set(i * 1.25, 0.025, 0);
+    g.add(s);
+  }
+  return g;
+}
+const zebra1 = zebra(); zebra1.position.z = -95;
+const zebra2 = zebra(); zebra2.position.z = -305;
+scene.add(zebra1, zebra2);
+
+/* Flèches peintes sur le goudron */
+function arrowPaint() {
+  const c = document.createElement('canvas'); c.width = 128; c.height = 256;
+  const x = c.getContext('2d');
+  x.fillStyle = '#ffffff';
+  x.fillRect(52, 90, 24, 166);
+  x.beginPath(); x.moveTo(64, 6); x.lineTo(112, 96); x.lineTo(16, 96); x.closePath(); x.fill();
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 5.2),
+    new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true }));
+  m.rotation.x = -Math.PI/2; m.rotation.z = Math.PI;
+  m.position.set(-3.6, 0.025, 0);
+  return m;
+}
+const arrows = [-60, -160, -260, -360].map(z => { const a = arrowPaint(); a.position.z = z; scene.add(a); return a; });
+
+/* ---------- Accotements verts + arbres ---------- */
+const gc = document.createElement('canvas'); gc.width = 64; gc.height = 64;
+{
+  const x = gc.getContext('2d');
+  x.fillStyle = '#4e8f4a'; x.fillRect(0, 0, 64, 64);
+  for (let i = 0; i < 300; i++) { x.fillStyle = `rgba(${40+Math.random()*40},${110+Math.random()*50},${45+Math.random()*30},0.5)`; x.fillRect(Math.random()*64, Math.random()*64, 2, 2); }
+}
+const grassTex = new THREE.CanvasTexture(gc);
+grassTex.wrapS = grassTex.wrapT = THREE.RepeatWrapping; grassTex.repeat.set(60, 200);
+const grass = new THREE.Mesh(new THREE.PlaneGeometry(900, TOTAL),
+  new THREE.MeshStandardMaterial({ map: grassTex, roughness: 1 }));
+grass.rotation.x = -Math.PI/2; grass.position.set(0, -0.06, road.position.z);
+scene.add(grass);
+
+const treeTrunkMat = new THREE.MeshStandardMaterial({ color: 0x6b4a2c, roughness: 1 });
+const treeLeafMats = [0x2f7d33, 0x3f9b43, 0x276e2c].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 1 }));
+const trees = [];
+for (let i = 0; i < 46; i++) {
+  const g = new THREE.Group();
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 2.4, 6), treeTrunkMat);
+  trunk.position.y = 1.2; g.add(trunk);
+  const leaves = new THREE.Mesh(new THREE.ConeGeometry(1.7 + Math.random(), 3.4 + Math.random()*1.6, 7), treeLeafMats[i % 3]);
+  leaves.position.y = 3.8; g.add(leaves);
+  const side = i % 2 === 0 ? -1 : 1;
+  g.position.set(side * (14 + Math.random()*26), 0, 12 - Math.random() * TOTAL);
+  const s = 0.8 + Math.random()*0.9; g.scale.set(s, s, s);
+  trees.push(g); scene.add(g);
+}
+
+/* ---------- PANNEAUX (textures canvas réalistes) ---------- */
+function signCanvas(draw) {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 256;
+  draw(c.getContext('2d'));
+  const t = new THREE.CanvasTexture(c);
+  t.anisotropy = 4;
+  return t;
+}
+const TEX = {
+  stop: signCanvas(x => {
+    x.beginPath();
+    for (let i = 0; i < 8; i++) { const a = Math.PI/8 + i * Math.PI/4; const px = 128 + Math.cos(a)*118, py = 128 + Math.sin(a)*118; i ? x.lineTo(px, py) : x.moveTo(px, py); }
+    x.closePath(); x.fillStyle = '#d92b2b'; x.fill(); x.strokeStyle = '#fff'; x.lineWidth = 10; x.stroke();
+    x.fillStyle = '#fff'; x.font = '900 72px Arial'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText('STOP', 128, 132);
+  }),
+  limit50: signCanvas(x => {
+    x.beginPath(); x.arc(128, 128, 120, 0, 7); x.fillStyle = '#d92b2b'; x.fill();
+    x.beginPath(); x.arc(128, 128, 96, 0, 7); x.fillStyle = '#fff'; x.fill();
+    x.fillStyle = '#111'; x.textAlign = 'center';
+    x.font = '900 86px Arial'; x.fillText('50', 128, 116);
+    x.font = '700 34px Arial'; x.fillText('km/h', 128, 176);
+  }),
+  limit90: signCanvas(x => {
+    x.beginPath(); x.arc(128, 128, 120, 0, 7); x.fillStyle = '#d92b2b'; x.fill();
+    x.beginPath(); x.arc(128, 128, 96, 0, 7); x.fillStyle = '#fff'; x.fill();
+    x.fillStyle = '#111'; x.textAlign = 'center';
+    x.font = '900 86px Arial'; x.fillText('90', 128, 116);
+    x.font = '700 34px Arial'; x.fillText('km/h', 128, 176);
+  }),
+  yield: signCanvas(x => {
+    x.beginPath(); x.moveTo(128, 240); x.lineTo(246, 30); x.lineTo(10, 30); x.closePath();
+    x.fillStyle = '#d92b2b'; x.fill();
+    x.beginPath(); x.moveTo(128, 196); x.lineTo(214, 52); x.lineTo(42, 52); x.closePath();
+    x.fillStyle = '#fff'; x.fill();
+  }),
+  noentry: signCanvas(x => {
+    x.beginPath(); x.arc(128, 128, 120, 0, 7); x.fillStyle = '#d92b2b'; x.fill();
+    x.fillStyle = '#fff'; x.fillRect(38, 108, 180, 40);
+  }),
+  danger: signCanvas(x => {
+    x.beginPath(); x.moveTo(128, 12); x.lineTo(248, 232); x.lineTo(8, 232); x.closePath();
+    x.fillStyle = '#fff'; x.fill(); x.lineWidth = 22; x.strokeStyle = '#d92b2b'; x.stroke();
+    x.fillStyle = '#111'; x.font = '900 120px Arial'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText('!', 128, 190);
+  }),
+  ped: signCanvas(x => {
+    x.beginPath(); x.moveTo(128, 12); x.lineTo(248, 232); x.lineTo(8, 232); x.closePath();
+    x.fillStyle = '#fff'; x.fill(); x.lineWidth = 22; x.strokeStyle = '#d92b2b'; x.stroke();
+    x.fillStyle = '#111';
+    x.beginPath(); x.arc(128, 88, 14, 0, 7); x.fill();
+    x.lineWidth = 13; x.strokeStyle = '#111'; x.lineCap = 'round';
+    x.beginPath(); x.moveTo(128, 102); x.lineTo(124, 152); x.stroke();
+    x.beginPath(); x.moveTo(124, 152); x.lineTo(102, 220); x.stroke();
+    x.beginPath(); x.moveTo(124, 152); x.lineTo(152, 220); x.stroke();
+    x.beginPath(); x.moveTo(126, 112); x.lineTo(96, 140); x.stroke();
+    x.beginPath(); x.moveTo(126, 112); x.lineTo(160, 132); x.stroke();
+  })
+};
+
+const poleMat = new THREE.MeshStandardMaterial({ color: 0x9aa2ad, roughness: 0.5, metalness: 0.55 });
+function makeSign(tex, z, side, scl = 1) {
+  const g = new THREE.Group();
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 3.4, 8), poleMat);
+  pole.position.y = 1.7; g.add(pole);
+  const panel = new THREE.Mesh(new THREE.PlaneGeometry(2.3*scl, 2.3*scl),
+    new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6, side: THREE.DoubleSide }));
+  panel.position.y = 3.4 + 1.05*scl;
+  g.add(panel);
+  g.position.set(side * (ROAD_W/2 + 1.6), 0, z);
+  return g;
+}
+const SIGNS = [
+  { tex: TEX.limit50, z: -28, side: -1 },
+  { tex: TEX.danger,  z: -55, side: 1 },
+  { tex: TEX.stop,    z: -85, side: -1, scl: 1.1 },
+  { tex: TEX.ped,     z: -120, side: 1 },
+  { tex: TEX.limit90, z: -150, side: -1 },
+  { tex: TEX.yield,   z: -180, side: 1 },
+  { tex: TEX.noentry, z: -215, side: -1 },
+  { tex: TEX.danger,  z: -245, side: 1 },
+  { tex: TEX.limit50, z: -275, side: -1 },
+  { tex: TEX.ped,     z: -335, side: 1, scl: 0.95 },
+  { tex: TEX.stop,    z: -365, side: -1 },
+  { tex: TEX.limit90, z: -395, side: 1 },
+];
+const signGroups = SIGNS.map(s => { const g = makeSign(s.tex, s.z, s.side, s.scl || 1); scene.add(g); return g; });
+
+/* ---------- IMAGE PERMIS B : grand panneau au-dessus de la route ---------- */
+const loader = new THREE.TextureLoader();
+const permisTex = loader.load('/img/permis_b.jpg');
+const cardFrame = new THREE.Mesh(
+  new THREE.PlaneGeometry(12.1, 7.15),
+  new THREE.MeshBasicMaterial({ color: 0xf5a524 })
+);
+const permisCard = new THREE.Mesh(
+  new THREE.PlaneGeometry(11.4, 6.45),
+  new THREE.MeshBasicMaterial({ map: permisTex })
+);
+permisCard.position.set(0, 7.2, -55); cardFrame.position.set(0, 7.2, -55.12);
+scene.add(cardFrame, permisCard);
+
+/* bandeau titre sous la carte */
+function bannerTexture() {
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 160;
+  const x = c.getContext('2d');
+  x.fillStyle = 'rgba(7,10,18,0.82)';
+  x.roundRect ? (x.beginPath(), x.roundRect(8, 8, 1008, 144, 40), x.fill()) : x.fillRect(8, 8, 1008, 144);
+  x.strokeStyle = '#f5a524'; x.lineWidth = 5;
+  x.roundRect ? (x.beginPath(), x.roundRect(8, 8, 1008, 144, 40), x.stroke()) : x.strokeRect(8, 8, 1008, 144);
+  x.fillStyle = '#ffd675'; x.font = '900 74px Arial'; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText('PERMIS B — RÉUSSIR AVEC SIGEXPC', 512, 84);
+  return new THREE.CanvasTexture(c);
+}
+const banner = new THREE.Mesh(
+  new THREE.PlaneGeometry(13.5, 2.1),
+  new THREE.MeshBasicMaterial({ map: bannerTexture(), transparent: true })
+);
+banner.position.set(0, 3.2, -55.2);
+scene.add(banner);
+
+/* ---------- Voiture (vue arrière) ---------- */
+const car = new THREE.Group();
+const body = new THREE.Mesh(new THREE.BoxGeometry(4.4, 1.35, 2.2), new THREE.MeshStandardMaterial({ color: 0xe8eaee, roughness: 0.35, metalness: 0.45 }));
+body.position.y = 1.05; car.add(body);
+const cabin = new THREE.Mesh(new THREE.BoxGeometry(3.1, 1.05, 2.0), new THREE.MeshStandardMaterial({ color: 0x18222f, roughness: 0.2, metalness: 0.6 }));
+cabin.position.y = 2.1; car.add(cabin);
+const wheelGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.42, 14);
+const wheelMat = new THREE.MeshStandardMaterial({ color: 0x17181c, roughness: 0.9 });
+[[-2.2, 0.55, 1.15], [2.2, 0.55, 1.15], [-2.2, 0.55, -1.15], [2.2, 0.55, -1.15]].forEach(p => {
+  const w = new THREE.Mesh(wheelGeo, wheelMat);
+  w.rotation.x = Math.PI/2; w.position.set(...p); car.add(w);
+});
+const brakeMat = new THREE.MeshBasicMaterial({ color: 0xff3b30 });
+const brakeL = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.28, 0.1), brakeMat); brakeL.position.set(-1.45, 1.05, 1.13); car.add(brakeL);
+const brakeR = brakeL.clone(); brakeR.position.x = 1.45; car.add(brakeR);
+car.position.set(-3.4, 0, -13);
+scene.add(car);
+
+/* ---------- BOUCLE 15 secondes ---------- */
+const LOOP = 15;
+const SPEED = TOTAL / LOOP; // exactement une longueur totale par boucle => seamless
+const clock = new THREE.Clock();
+let mouseX = 0, mouseY = 0;
+addEventListener('pointermove', e => {
+  mouseX = (e.clientX / innerWidth - 0.5) * 2;
+  mouseY = (e.clientY / innerHeight - 0.5) * 2;
+}, { passive: true });
+
+function recycle(obj) {
+  if (obj.position.z > 26) obj.position.z -= TOTAL;
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const dz = SPEED * dt;
+  const t = clock.elapsedTime;
+
+  dashes.forEach(d => { d.position.z += dz; recycle(d); });
+  zebra1.position.z += dz; recycle(zebra1);
+  zebra2.position.z += dz; recycle(zebra2);
+  arrows.forEach(a => { a.position.z += dz; recycle(a); });
+  trees.forEach(tr => { tr.position.z += dz; recycle(tr); });
+  signGroups.forEach(s => { s.position.z += dz; recycle(s); });
+
+  // le goudron défile
+  asphalt.offset.y -= dz / 4.67;
+  grassTex.offset.y -= dz * 0.011;
+
+  // carte permis : flotte, ondule, cadre doré pulsant
+  const bob = Math.sin(t * 1.5) * 0.5;
+  permisCard.position.y = 7.2 + bob; cardFrame.position.y = 7.2 + bob;
+  banner.position.y = 3.2 + bob * 0.55;
+  const wob = Math.sin(t * 0.85) * 0.13;
+  permisCard.rotation.y = wob; cardFrame.rotation.y = wob; banner.rotation.y = wob * 0.5;
+  permisCard.rotation.x = Math.sin(t * 0.65) * 0.07; cardFrame.rotation.x = permisCard.rotation.x;
+  cardFrame.material.color.setHSL(0.09, 0.92, 0.45 + Math.sin(t * 2.2) * 0.09);
+
+  // nuages
+  clouds.forEach((c, i) => { c.position.x += (0.3 + (i % 3) * 0.15) * dt * 2; if (c.position.x > 260) c.position.x = -260; });
+
+  // voiture
+  car.position.y = Math.sin(t * 7) * 0.03;
+  car.position.x = -3.4 + Math.sin(t * 0.5) * 0.7;
+  brakeMat.color.setHex(Math.sin(t * 3) > 0.6 ? 0xff1512 : 0x8b100c);
+
+  // caméra : parallax souris + roulis doux
+  const px = mouseX * 2.4, py = -mouseY * 1.2;
+  camera.position.x += (px - camera.position.x) * 0.045;
+  camera.position.y += ((7.5 + py) - camera.position.y) * 0.045;
+  camera.position.z = 14 + Math.sin(t * 1.2) * 0.3;
+  camera.lookAt(camera.position.x * 0.3, 4 + Math.sin(t * 0.8) * 0.15, -42);
+
+  renderer.render(scene, camera);
+}
+animate();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) clock.stop(); else clock.start();
+});
+</script>
+
+<!-- ================= UI : nav, tabs, reveal, parallax, jauge ================= -->
+<script>
+(function () {
+  const burger = document.getElementById('burger');
+  const links = document.getElementById('navLinks');
+  burger.addEventListener('click', () => links.classList.toggle('open'));
+  links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => links.classList.remove('open')));
+
+  const nav = document.getElementById('nav');
+  addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 40), { passive: true });
+
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('show'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.tab).classList.add('show');
     });
-    html += `</div><div class="explanation" id="explanation">${q.explanation}</div></div>`;
+  });
 
-    document.getElementById('questionArea').innerHTML = html;
-    document.getElementById('btnNext').classList.remove('show');
-    updateProgress();
-  }
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.12 });
+  document.querySelectorAll('.rv').forEach(el => io.observe(el));
 
-  function selectAnswer(idx) {
-    const q = QUESTIONS[currentQ];
-    document.querySelectorAll('.option').forEach(o => o.classList.add('disabled'));
-    if (idx === q.correct) {
-      document.getElementById('opt' + idx).classList.add('correct');
-      score++;
-    } else {
-      document.getElementById('opt' + idx).classList.add('wrong');
-      document.getElementById('opt' + q.correct).classList.add('correct');
+  /* Jauge 12 points */
+  const gaugeNum = document.getElementById('gaugeNum');
+  const gaugeArc = document.getElementById('gaugeArc');
+  const gio = new IntersectionObserver(entries => {
+    if (!entries[0].isIntersecting) return;
+    gio.disconnect();
+    const C = 603;
+    let n = 0;
+    const step = () => {
+      n = Math.min(n + 0.25, 12);
+      gaugeNum.textContent = Math.round(n);
+      gaugeArc.style.strokeDashoffset = C * (1 - n / 12);
+      if (n < 12) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, { threshold: 0.4 });
+  gio.observe(document.querySelector('.gauge-card'));
+
+  /* ===== PARALLAX ===== */
+  const permisCard = document.getElementById('permisCard');
+  const hero3d = document.getElementById('hero-3d');
+  let mx = 0, my = 0, cmx = 0, cmy = 0;
+  addEventListener('pointermove', e => {
+    mx = (e.clientX / innerWidth - 0.5);
+    my = (e.clientY / innerHeight - 0.5);
+  }, { passive: true });
+
+  const floats = document.querySelectorAll('[data-float]');
+  const hero = document.querySelector('.hero');
+  let ticking = false;
+  function frame() {
+    ticking = false;
+    // lissage parallax souris
+    cmx += (mx - cmx) * 0.08; cmy += (my - cmy) * 0.08;
+    const y = scrollY;
+    if (y < innerHeight * 1.1) {
+      hero.style.transform = `translateY(${y * 0.36}px)`;
+      hero.style.opacity = Math.max(0, 1 - y / (innerHeight * 0.8));
+      if (permisCard) permisCard.style.transform = `rotate(4deg) translate(${cmx * -30}px, ${cmy * -20 + y * 0.2}px)`;
+      hero3d.style.transform = `translate(${cmx * -12}px, ${cmy * -7}px) scale(1.045)`;
     }
-    document.getElementById('explanation').classList.add('show');
-    document.getElementById('btnNext').classList.add('show');
-    document.getElementById('btnNext').textContent = currentQ < QUESTIONS.length - 1 ? 'Suivant →' : 'Voir mon résultat';
-    document.getElementById('qScore').textContent = score;
-    userAnswers.push({ qIdx: currentQ, selected: idx, correct: q.correct });
-  }
-
-  function nextQuestion() {
-    currentQ++;
-    if (currentQ < QUESTIONS.length) showQuestion();
-    else showResult();
-  }
-
-  function updateProgress() {
-    document.getElementById('progressFill').style.width = (currentQ / QUESTIONS.length * 100) + '%';
-    document.getElementById('qCurrent').textContent = currentQ + 1;
-  }
-
-  function showResult() {
-    document.getElementById('quizScreen').style.display = 'none';
-    document.getElementById('resultScreen').style.display = 'block';
-    document.getElementById('resultScore').textContent = score;
-    const passed = score >= 7;
-    const circle = document.getElementById('resultCircle');
-    circle.className = 'result-circle ' + (passed ? 'pass' : 'fail');
-    document.getElementById('resultMsg').textContent = passed ? '🎉 Bravo, quiz réussi !' : '😕 Continuez à réviser';
-    document.getElementById('resultDetail').textContent = passed
-      ? `${score}/10 — Vous maîtrisez bien le code de la route ivoirien !`
-      : `${score}/10 — Il faut au moins 7 bonnes réponses. Révisez et recommencez !`;
-
-    let reviewHtml = '<div class="review-title">📋 Corrections</div>';
-    userAnswers.forEach((a, i) => {
-      const q = QUESTIONS[a.qIdx];
-      const ok = a.selected === a.correct;
-      reviewHtml += `<div class="review-item">
-        <div class="review-q"><span class="${ok?'ok':'ko'}">${ok?'✓':'✗'}</span> ${i+1}. ${q.q}</div>
-        <div class="review-a">Bonne réponse : <b>${q.options[q.correct]}</b>${!ok ? ' &nbsp;| Votre réponse : <span class="ko">'+q.options[a.selected]+'</span>' : ''}</div>
-      </div>`;
+    floats.forEach((f, i) => {
+      const r = f.getBoundingClientRect();
+      if (r.bottom > 0 && r.top < innerHeight) {
+        f.style.transform = `translateY(${(y * (0.08 + (i % 2) * 0.07)) % 160 - 40}px) rotate(${Math.sin(y / 300 + i) * 8}deg)`;
+      }
     });
-    document.getElementById('reviewSection').innerHTML = reviewHtml;
   }
+  function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }
+  addEventListener('scroll', onScroll, { passive: true });
+  frame();
 
-  function restartQuiz() {
-    document.getElementById('resultScreen').style.display = 'none';
-    document.getElementById('startScreen').style.display = 'block';
-  }
-  </script>
+  /* Lien actif selon section visible */
+  const sio = new IntersectionObserver(es => {
+    es.forEach(e => {
+      if (e.isIntersecting) {
+        document.querySelectorAll('.nav-links a').forEach(a =>
+          a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
+      }
+    });
+  }, { rootMargin: '-40% 0px -55% 0px' });
+  ['points', 'infractions', 'dossiers', 'documents', 'categories'].forEach(id => {
+    const el = document.getElementById(id); if (el) sio.observe(el);
+  });
+})();
+</script>
 </body>
 </html>

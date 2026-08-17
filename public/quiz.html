@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Code de la Route - SIGEXPC</title>
+  <link rel="icon" href="/img/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #060810;
+      --surface: #131826;
+      --bg2: #0d1220;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --green: #10b981;
+      --blue: #3b82f6;
+      --border: rgba(255,255,255,0.08);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg); color:var(--text); font-family:'Outfit',sans-serif; min-height:100vh; }
+    .bg-grid { position:fixed; inset:0; z-index:0; opacity:0.2;
+      background-image: linear-gradient(rgba(59,130,246,0.05) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(59,130,246,0.05) 1px, transparent 1px);
+      background-size: 50px 50px; pointer-events:none; }
+    .container { position:relative; z-index:1; max-width:700px; margin:0 auto; padding:20px; }
+
+    .header { text-align:center; padding:25px 0; }
+    .header img { width:56px; height:56px; border-radius:14px; border:2px solid rgba(245,158,11,0.3); }
+    .header h1 { font-family:'Space Grotesk',sans-serif; font-size:1.6rem; font-weight:700; margin:10px 0 4px; }
+    .header h1 span { color:var(--yellow); }
+    .header p { color:var(--muted); font-size:0.85rem; }
+
+    /* START */
+    .start-screen { text-align:center; padding:30px 20px; }
+    .start-screen h2 { font-size:clamp(1.4rem,5vw,2rem); font-weight:800; margin-bottom:12px; line-height:1.3; }
+    .start-screen h2 .grad { background:linear-gradient(135deg,var(--yellow),var(--red)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+    .start-screen .desc { color:var(--muted); font-size:0.95rem; max-width:480px; margin:0 auto 25px; line-height:1.6; }
+    .cats { display:flex; gap:14px; justify-content:center; margin-bottom:25px; flex-wrap:wrap; }
+    .cat-badge { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px 20px; min-width:140px; }
+    .cat-badge .icon { font-size:1.8rem; margin-bottom:6px; }
+    .cat-badge .title { font-weight:700; font-size:0.9rem; }
+    .cat-badge .count { color:var(--muted); font-size:0.75rem; }
+    .btn-start { background:linear-gradient(135deg,var(--yellow),var(--red)); color:#fff; border:none; padding:16px 45px; border-radius:30px; font-size:1.05rem; font-weight:700; cursor:pointer; font-family:inherit; box-shadow:0 8px 25px rgba(245,158,11,0.3); transition:transform 0.2s; }
+    .btn-start:hover { transform:translateY(-3px); }
+
+    /* QUIZ */
+    .quiz-screen { display:none; }
+    .cat-header { text-align:center; margin-bottom:20px; }
+    .cat-label { display:inline-block; padding:6px 18px; border-radius:20px; font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; }
+    .cat-label.c1 { background:rgba(245,158,11,0.15); color:var(--yellow); border:1px solid rgba(245,158,11,0.3); }
+    .cat-label.c2 { background:rgba(239,68,68,0.15); color:var(--red); border:1px solid rgba(239,68,68,0.3); }
+    .progress-bar { display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+    .progress-track { flex:1; height:5px; background:var(--surface); border-radius:3px; overflow:hidden; }
+    .progress-fill { height:100%; background:linear-gradient(90deg,var(--yellow),var(--red)); border-radius:3px; transition:width 0.4s; width:0; }
+    .progress-text { font-size:0.78rem; color:var(--muted); white-space:nowrap; }
+    .progress-score { font-family:'Space Grotesk',sans-serif; font-weight:700; color:var(--green); }
+
+    .question-card { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:26px; margin-bottom:16px; animation:slideIn 0.4s; }
+    @keyframes slideIn { from{opacity:0;transform:translateY(15px);} to{opacity:1;transform:translateY(0);} }
+    .q-num-row { display:flex; align-items:center; gap:10px; margin-bottom:15px; }
+    .q-num { width:34px; height:34px; border-radius:10px; background:rgba(245,158,11,0.15); color:var(--yellow); display:flex; align-items:center; justify-content:center; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:0.85rem; flex-shrink:0; }
+    .q-text { font-size:1.1rem; font-weight:600; line-height:1.5; margin-bottom:18px; }
+    .sign-display { text-align:center; margin-bottom:18px; }
+
+    .options { display:flex; flex-direction:column; gap:9px; }
+    .option { background:var(--bg2); border:2px solid var(--border); border-radius:12px; padding:15px 18px; cursor:pointer; font-family:inherit; font-size:0.98rem; color:var(--text); text-align:left; transition:all 0.2s; display:flex; align-items:center; gap:11px; }
+    .option:hover { border-color:rgba(59,130,246,0.4); background:rgba(59,130,246,0.05); }
+    .option .letter { width:26px; height:26px; border-radius:7px; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.82rem; flex-shrink:0; }
+    .option.correct { border-color:var(--green); background:rgba(16,185,129,0.1); }
+    .option.correct .letter { background:var(--green); color:#fff; }
+    .option.wrong { border-color:var(--red); background:rgba(239,68,68,0.1); }
+    .option.wrong .letter { background:var(--red); color:#fff; }
+    .option.disabled { pointer-events:none; opacity:0.65; }
+
+    .explanation { margin-top:14px; padding:14px; background:rgba(59,130,246,0.08); border-left:3px solid var(--blue); border-radius:8px; font-size:0.88rem; line-height:1.5; color:var(--muted); display:none; }
+    .explanation.show { display:block; animation:fadeIn 0.3s; }
+    .explanation b { color:var(--text); }
+    @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
+    .btn-next { background:var(--blue); color:#fff; border:none; padding:13px 38px; border-radius:30px; font-size:0.98rem; font-weight:700; cursor:pointer; font-family:inherit; display:none; margin:0 auto; transition:transform 0.2s; }
+    .btn-next.show { display:block; }
+    .btn-next:hover { transform:translateY(-2px); }
+
+    /* RESULT */
+    .result-screen { display:none; text-align:center; padding:25px 20px; }
+    .result-circle { width:130px; height:130px; border-radius:50%; margin:0 auto 22px; display:flex; flex-direction:column; align-items:center; justify-content:center; border:4px solid; }
+    .result-circle.pass { border-color:var(--green); background:rgba(16,185,129,0.1); }
+    .result-circle.fail { border-color:var(--red); background:rgba(239,68,68,0.1); }
+    .result-score { font-family:'Space Grotesk',sans-serif; font-size:2.8rem; font-weight:700; }
+    .result-circle.pass .result-score { color:var(--green); }
+    .result-circle.fail .result-score { color:var(--red); }
+    .result-total { font-size:0.85rem; color:var(--muted); }
+    .result-msg { font-size:1.3rem; font-weight:700; margin-bottom:8px; }
+    .result-detail { color:var(--muted); margin-bottom:25px; font-size:0.92rem; }
+    .btn-retry { background:var(--surface); color:var(--text); border:2px solid var(--border); padding:13px 32px; border-radius:30px; font-size:0.98rem; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.2s; }
+    .btn-retry:hover { border-color:var(--yellow); }
+
+    .review-section { margin-top:25px; text-align:left; }
+    .review-title { font-size:1.05rem; font-weight:700; margin-bottom:12px; text-align:center; }
+    .review-item { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:10px; }
+    .review-q { font-size:0.88rem; font-weight:600; margin-bottom:6px; }
+    .review-a { font-size:0.82rem; }
+    .review-a .ok { color:var(--green); font-weight:600; }
+    .review-a .ko { color:var(--red); font-weight:600; }
+
+    @media(max-width:540px) {
+      .question-card { padding:20px; }
+      .q-text { font-size:1rem; }
+      .option { padding:13px 15px; font-size:0.92rem; }
+      .cats { gap:10px; }
+      .cat-badge { min-width:120px; padding:12px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="container">
+    <div class="header">
+      <a href="/lp" style="display:inline-block;margin-bottom:14px;color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;border:1px solid rgba(255,255,255,0.12);padding:7px 16px;border-radius:100px;transition:all .25s;" onmouseover="this.style.color='#e2e8f0';this.style.borderColor='rgba(245,158,11,0.5)'" onmouseout="this.style.color='';this.style.borderColor='rgba(255,255,255,0.12)'">← Retour à l'accueil</a>
+      <br>
+      <img src="/img/logo.png" alt="SIGEXPC">
+      <h1>Quiz <span>Code de la Route</span></h1>
+      <p>Côte d'Ivoire 2026</p>
+    </div>
+
+    <!-- START -->
+    <div class="start-screen" id="startScreen">
+      <h2>Testez vos connaissances du <span class="grad">code de la route</span></h2>
+      <p class="desc">10 questions réparties en 2 catégories, basées sur le code de la route ivoirien 2026. Correction immédiate après chaque réponse.</p>
+      <div class="cats">
+        <div class="cat-badge">
+          <div class="icon">🚦</div>
+          <div class="title">Panneaux & Vitesse</div>
+          <div class="count">5 questions</div>
+        </div>
+        <div class="cat-badge">
+          <div class="icon">📜</div>
+          <div class="title">Permis & Amendes</div>
+          <div class="count">5 questions</div>
+        </div>
+      </div>
+      <button class="btn-start" onclick="startQuiz()">Commencer le quiz</button>
+    </div>
+
+    <!-- QUIZ -->
+    <div class="quiz-screen" id="quizScreen">
+      <div class="cat-header"><div class="cat-label" id="catLabel"></div></div>
+      <div class="progress-bar">
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-text">Q<span id="qCurrent">1</span>/10</div>
+        <div class="progress-score" id="qScore">0</div>
+      </div>
+      <div id="questionArea"></div>
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()">Suivant →</button>
+    </div>
+
+    <!-- RESULT -->
+    <div class="result-screen" id="resultScreen">
+      <div class="result-circle" id="resultCircle">
+        <div class="result-score" id="resultScore">0</div>
+        <div class="result-total">/ 10</div>
+      </div>
+      <div class="result-msg" id="resultMsg"></div>
+      <div class="result-detail" id="resultDetail"></div>
+      <button class="btn-retry" onclick="restartQuiz()">↻ Recommencer</button>
+      <div class="review-section" id="reviewSection"></div>
+    </div>
+  </div>
+
+  <script>
+  // ====================================================================
+  //  CATÉGORIE 1 — PANNEAUX DE SIGNALISATION & VITESSE (5 questions)
+  // ====================================================================
+  // CATÉGORIE 2 — PERMIS À POINTS & AMENDES (5 questions)
+  // ====================================================================
+  const QUESTIONS = [
+    // ===== CAT 1: PANNEAUX & VITESSE =====
+    {
+      cat: 1,
+      q: "Vous voyez ce panneau à une intersection. Que devez-vous faire ?",
+      sign: 'stop',
+      options: ["Ralentir et continuer", "Marquer un arrêt complet puis repartir", "Klaxonner avant de passer", "Mettre les warning et passer"],
+      correct: 1,
+      explanation: "Le panneau <b>STOP</b> impose un <b>arrêt complet</b> du véhicule. Le conducteur doit immobiliser totalement son véhicule, vérifier que la voie est libre, puis repartir."
+    },
+    {
+      cat: 1,
+      q: "Vous circulez sur l'autoroute Abidjan–Yamoussoukro. Quelle est votre vitesse maximale légale ?",
+      sign: null,
+      options: ["100 km/h", "110 km/h", "120 km/h", "130 km/h"],
+      correct: 2,
+      explanation: "Sur autoroute, la limite est de <b>120 km/h</b> pour les véhicules légers. Les poids lourds ont une limite plus basse (90 km/h)."
+    },
+    {
+      cat: 1,
+      q: "Que signifie ce panneau triangulaire inversé (pointe vers le bas) ?",
+      sign: 'yield',
+      options: ["Danger — ralentir fortement", "Cédez le passage aux autres véhicules", "Arrêt obligatoire", "Priorité à vous"],
+      correct: 1,
+      explanation: "Le triangle inversé signifie <b>Cédez le passage</b>. Vous devez ralentir et laisser passer les véhicules qui arrivent avant de vous engager."
+    },
+    {
+      cat: 1,
+      q: "En ville à Abidjan, un panneau rond bleu indique « 50 ». Cela signifie :",
+      sign: null,
+      options: ["Vous devez rouler à exactement 50 km/h", "La vitesse maximale est 50 km/h", "Il reste 50 km jusqu'à la destination", "C'est la route numérotée 50"],
+      correct: 1,
+      explanation: "Un panneau rond à fond bleu avec un chiffre indique la <b>vitesse maximale autorisée</b>. À partir de ce panneau, vous ne devez pas dépasser 50 km/h."
+    },
+    {
+      cat: 1,
+      q: "Sur une route en latérite (piste non goudronnée), quelle est la vitesse maximale autorisée ?",
+      sign: null,
+      options: ["30 km/h", "40 km/h", "50 km/h", "60 km/h"],
+      correct: 1,
+      explanation: "Sur route en latérite, la vitesse est limitée à <b>40 km/h</b> en raison de la poussière, des nids-de-poule et de la visibilité réduite."
+    },
+    // ===== CAT 2: PERMIS À POINTS & AMENDES =====
+    {
+      cat: 2,
+      q: "En Côte d'Ivoire, combien de points possède un permis de conduire ?",
+      sign: null,
+      options: ["6 points", "10 points", "12 points", "15 points"],
+      correct: 2,
+      explanation: "Le permis ivoirien possède <b>12 points</b>. Chaque infraction entraîne un retrait de points. À zéro point, le permis est annulé."
+    },
+    {
+      cat: 2,
+      q: "Vous conduisez en tenant votre téléphone dans la main. Quelle est la sanction ?",
+      sign: null,
+      options: ["Simple avertissement", "Amende sans perte de points", "Amende ET retrait de points de permis", "Rien si c'est un coup rapide"],
+      correct: 2,
+      explanation: "Le téléphone au volant est <b>totalement interdit</b>. C'est une infraction qui entraîne à la fois une <b>amende et un retrait de points</b> sur le permis."
+    },
+    {
+      cat: 2,
+      q: "Quel est le taux d'alcoolémie maximal autorisé au volant en Côte d'Ivoire ?",
+      sign: null,
+      options: ["0,2 g/l de sang", "0,5 g/l de sang", "0,8 g/l de sang", "1,2 g/l de sang"],
+      correct: 2,
+      explanation: "Le taux légal est de <b>0,8 g/l de sang</b>. Au-delà, c'est une infraction sévèrement sanctionnée (amende, retrait de points, voire retrait de permis)."
+    },
+    {
+      cat: 2,
+      q: "Vous oubliez d'attacher votre ceinture de sécurité. C'est :",
+      sign: null,
+      options: ["Légal à l'arrière", "Une contravention de 3ème classe", "Autorisé en ville", "Juste un avertissement verbal"],
+      correct: 1,
+      explanation: "Le non-port de la ceinture est une <b>contravention de 3ème classe</b>, valable pour TOUS les passagers (avant ET arrière). C'est l'une des infractions les plus sanctionnées."
+    },
+    {
+      cat: 2,
+      q: "Depuis 2024, un nouveau système de contrôle s'est développé sur les routes ivoiriennes. De quoi s'agit-il ?",
+      sign: null,
+      options: ["Contrôles par drones", "Vidéo-verbalisation (radars et caméras automatiques)", "Contrôles aléatoires par SMS", "Alcootests obligatoires à domicile"],
+      correct: 1,
+      explanation: "La <b>vidéo-verbalisation</b> (radars et caméras automatiques) est de plus en plus présente. En 2024, plus de <b>2 milliards de FCFA</b> d'amendes ont été collectés. Même sans policier visible, vous pouvez être verbalisé."
+    }
+  ];
+
+  // SVG panneaux
+  const SIGNS = {
+    stop: `<svg width="75" height="75" viewBox="0 0 100 100"><polygon points="30,5 70,5 95,30 95,70 70,95 30,95 5,70 5,30" fill="#dc2626" stroke="#fff" stroke-width="5"/><text x="50" y="58" font-family="Arial" font-weight="bold" font-size="22" fill="#fff" text-anchor="middle">STOP</text></svg>`,
+    yield: `<svg width="75" height="75" viewBox="0 0 100 100"><polygon points="10,15 90,15 50,88" fill="#fff" stroke="#dc2626" stroke-width="8"/><polygon points="28,28 72,28 50,68" fill="#dc2626"/></svg>`
+  };
+
+  // ====================================================================
+  //  LOGIQUE
+  // ====================================================================
+  let currentQ = 0, score = 0, userAnswers = [];
+
+  function startQuiz() {
+    document.getElementById('startScreen').style.display = 'none';
+    document.getElementById('quizScreen').style.display = 'block';
+    currentQ = 0; score = 0; userAnswers = [];
+    showQuestion();
+  }
+
+  function showQuestion() {
+    const q = QUESTIONS[currentQ];
+    const letters = ['A','B','C','D'];
+
+    // Catégorie label
+    const lbl = document.getElementById('catLabel');
+    if (q.cat === 1) { lbl.className = 'cat-label c1'; lbl.textContent = '🚦 Panneaux & Vitesse'; }
+    else { lbl.className = 'cat-label c2'; lbl.textContent = '📜 Permis & Amendes'; }
+
+    let html = `<div class="question-card">
+      <div class="q-num-row"><div class="q-num">${currentQ + 1}</div></div>
+      <div class="q-text">${q.q}</div>`;
+
+    if (q.sign && SIGNS[q.sign]) html += `<div class="sign-display">${SIGNS[q.sign]}</div>`;
+
+    html += `<div class="options">`;
+    q.options.forEach((opt, i) => {
+      html += `<button class="option" id="opt${i}" onclick="selectAnswer(${i})"><div class="letter">${letters[i]}</div><div>${opt}</div></button>`;
+    });
+    html += `</div><div class="explanation" id="explanation">${q.explanation}</div></div>`;
+
+    document.getElementById('questionArea').innerHTML = html;
+    document.getElementById('btnNext').classList.remove('show');
+    updateProgress();
+  }
+
+  function selectAnswer(idx) {
+    const q = QUESTIONS[currentQ];
+    document.querySelectorAll('.option').forEach(o => o.classList.add('disabled'));
+    if (idx === q.correct) {
+      document.getElementById('opt' + idx).classList.add('correct');
+      score++;
+    } else {
+      document.getElementById('opt' + idx).classList.add('wrong');
+      document.getElementById('opt' + q.correct).classList.add('correct');
+    }
+    document.getElementById('explanation').classList.add('show');
+    document.getElementById('btnNext').classList.add('show');
+    document.getElementById('btnNext').textContent = currentQ < QUESTIONS.length - 1 ? 'Suivant →' : 'Voir mon résultat';
+    document.getElementById('qScore').textContent = score;
+    userAnswers.push({ qIdx: currentQ, selected: idx, correct: q.correct });
+  }
+
+  function nextQuestion() {
+    currentQ++;
+    if (currentQ < QUESTIONS.length) showQuestion();
+    else showResult();
+  }
+
+  function updateProgress() {
+    document.getElementById('progressFill').style.width = (currentQ / QUESTIONS.length * 100) + '%';
+    document.getElementById('qCurrent').textContent = currentQ + 1;
+  }
+
+  function showResult() {
+    document.getElementById('quizScreen').style.display = 'none';
+    document.getElementById('resultScreen').style.display = 'block';
+    document.getElementById('resultScore').textContent = score;
+    const passed = score >= 7;
+    const circle = document.getElementById('resultCircle');
+    circle.className = 'result-circle ' + (passed ? 'pass' : 'fail');
+    document.getElementById('resultMsg').textContent = passed ? '🎉 Bravo, quiz réussi !' : '😕 Continuez à réviser';
+    document.getElementById('resultDetail').textContent = passed
+      ? `${score}/10 — Vous maîtrisez bien le code de la route ivoirien !`
+      : `${score}/10 — Il faut au moins 7 bonnes réponses. Révisez et recommencez !`;
+
+    let reviewHtml = '<div class="review-title">📋 Corrections</div>';
+    userAnswers.forEach((a, i) => {
+      const q = QUESTIONS[a.qIdx];
+      const ok = a.selected === a.correct;
+      reviewHtml += `<div class="review-item">
+        <div class="review-q"><span class="${ok?'ok':'ko'}">${ok?'✓':'✗'}</span> ${i+1}. ${q.q}</div>
+        <div class="review-a">Bonne réponse : <b>${q.options[q.correct]}</b>${!ok ? ' &nbsp;| Votre réponse : <span class="ko">'+q.options[a.selected]+'</span>' : ''}</div>
+      </div>`;
+    });
+    document.getElementById('reviewSection').innerHTML = reviewHtml;
+  }
+
+  function restartQuiz() {
+    document.getElementById('resultScreen').style.display = 'none';
+    document.getElementById('startScreen').style.display = 'block';
+  }
+  </script>
+</body>
+</html>
