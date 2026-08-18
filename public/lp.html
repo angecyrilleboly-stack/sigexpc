@@ -284,23 +284,95 @@
       background:rgba(59,130,246,0.09); border:1px solid rgba(59,130,246,0.3); color:#9ec2f8;
     }
 
-    /* ============ DOCUMENTS IDENTIFICATION ============ */
-    .docs-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:22px; }
-    .doc-id {
+    /* ============ DOCUMENTS OFFICIELS (style Quipux) ============ */
+    .qup-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(310px,1fr)); gap:24px; }
+    .qup-card {
       background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-      overflow:hidden; transition:all .35s;
+      padding:30px 26px; display:flex; flex-direction:column; transition:all .35s; position:relative; overflow:hidden;
     }
-    .doc-id:hover { transform:translateY(-8px); border-color:rgba(245,165,36,0.4); box-shadow:0 24px 50px rgba(0,0,0,0.45); }
-    .doc-id .thumb { height:170px; overflow:hidden; position:relative; background:#1c2440; }
-    .doc-id .thumb img { width:100%; height:100%; object-fit:cover; transition:transform .5s; }
-    .doc-id:hover .thumb img { transform:scale(1.07); }
-    .doc-id .thumb .big-ico {
-      position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:56px;
-      background:linear-gradient(140deg,#1a2340,#101627);
+    .qup-card::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:3px;
+      background:linear-gradient(90deg,var(--yellow),var(--orange)); opacity:0; transition:.35s;
     }
-    .doc-id .body { padding:22px; }
-    .doc-id h4 { font-size:17px; display:flex; align-items:center; gap:9px; }
-    .doc-id p { color:var(--muted); font-size:13.5px; margin-top:8px; line-height:1.55; }
+    .qup-card:hover { transform:translateY(-8px); border-color:rgba(245,165,36,0.4); box-shadow:0 24px 50px rgba(0,0,0,0.45); }
+    .qup-card:hover::before { opacity:1; }
+    .qup-card .qup-ico {
+      width:70px; height:70px; border-radius:20px; display:flex; align-items:center; justify-content:center;
+      font-size:34px; margin-bottom:18px; flex:none;
+      background:linear-gradient(140deg,#1a2340,#101627); border:1px solid rgba(245,165,36,0.28);
+    }
+    .qup-card h4 { font-size:19px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .qup-card .pro {
+      font-size:10px; font-weight:800; letter-spacing:1px; padding:3px 10px; border-radius:100px;
+      background:rgba(34,197,94,0.13); color:#4ade80; border:1px solid rgba(34,197,94,0.4);
+    }
+    .qup-card p { color:var(--muted); font-size:13.5px; margin-top:10px; line-height:1.6; flex:1; }
+    .qup-card .ref {
+      display:block; margin-top:12px; font-size:11.5px; color:#7c8aa5; font-style:italic;
+    }
+    .btn-details {
+      margin-top:20px; align-self:flex-start; cursor:pointer; border:none; font-family:inherit;
+      display:inline-flex; align-items:center; gap:8px; font-weight:800; font-size:14px;
+      padding:11px 22px; border-radius:100px; color:#181104;
+      background:linear-gradient(135deg,var(--yellow),var(--orange));
+      box-shadow:0 8px 22px rgba(249,115,22,0.3); transition:all .3s;
+    }
+    .btn-details:hover { transform:translateY(-2px) scale(1.03); box-shadow:0 12px 30px rgba(249,115,22,0.45); }
+
+    /* ---- Modale Détails ---- */
+    .qup-modal {
+      position:fixed; inset:0; z-index:200; display:none;
+      align-items:center; justify-content:center; padding:24px;
+      background:rgba(4,6,12,0.78); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    }
+    .qup-modal.open { display:flex; animation:fadeIn .3s both; }
+    .qup-modal .box {
+      width:min(640px,100%); max-height:86vh; overflow-y:auto;
+      background:linear-gradient(160deg,#151d33,#0e1322);
+      border:1px solid rgba(245,165,36,0.35); border-radius:26px;
+      padding:38px 36px 32px; position:relative;
+      box-shadow:0 40px 100px rgba(0,0,0,0.7);
+      animation:cardIn .35s both;
+    }
+    .qup-modal .close {
+      position:absolute; top:16px; right:16px; width:38px; height:38px; border-radius:12px;
+      background:rgba(255,255,255,0.07); border:1px solid var(--border); color:var(--text);
+      font-size:17px; cursor:pointer; transition:.25s; display:flex; align-items:center; justify-content:center;
+    }
+    .qup-modal .close:hover { background:rgba(239,68,68,0.2); border-color:rgba(239,68,68,0.5); }
+    .qup-modal .m-ico {
+      width:76px; height:76px; border-radius:22px; display:flex; align-items:center; justify-content:center;
+      font-size:38px; background:linear-gradient(140deg,#1a2340,#101627); border:1px solid rgba(245,165,36,0.3);
+      margin-bottom:18px;
+    }
+    .qup-modal .m-label {
+      font-size:11px; font-weight:800; letter-spacing:2.5px; text-transform:uppercase;
+      color:var(--yellow); margin-bottom:6px;
+    }
+    .qup-modal h3 { font-family:'Space Grotesk'; font-size:26px; margin-bottom:14px; }
+    .qup-modal .m-desc { color:#c6d0e2; font-size:14.5px; line-height:1.7; }
+    .qup-modal .m-steps-label {
+      font-family:'Space Grotesk'; font-size:17px; font-weight:700; color:var(--text);
+      margin:24px 0 14px; display:flex; align-items:center; gap:10px;
+    }
+    .qup-modal ol.m-steps { list-style:none; display:flex; flex-direction:column; gap:10px; counter-reset:st; }
+    .qup-modal ol.m-steps li {
+      counter-increment:st; display:flex; gap:13px; align-items:flex-start;
+      background:rgba(255,255,255,0.035); border:1px solid rgba(255,255,255,0.07);
+      padding:13px 16px; border-radius:14px; font-size:14px; color:#c9d3e4; line-height:1.55;
+    }
+    .qup-modal ol.m-steps li::before {
+      content:counter(st); flex:none; width:26px; height:26px; border-radius:9px; margin-top:1px;
+      background:linear-gradient(135deg,var(--yellow),var(--orange)); color:#181104;
+      display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px;
+    }
+    .qup-modal .m-pdf {
+      margin-top:24px; display:inline-flex; align-items:center; gap:10px; text-decoration:none;
+      font-weight:800; font-size:14px; padding:13px 24px; border-radius:14px;
+      color:#bfdbfe; background:rgba(59,130,246,0.12); border:1px solid rgba(59,130,246,0.4); transition:.3s;
+    }
+    .qup-modal .m-pdf:hover { background:rgba(59,130,246,0.22); transform:translateY(-2px); }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
 
     /* ============ CATÉGORIES ============ */
     .cats { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:18px; }
@@ -651,58 +723,67 @@
   </div>
 </section>
 
-<!-- ================= DOCUMENTS D'IDENTIFICATION ================= -->
+<!-- ================= DOCUMENTS OFFICIELS DE TRANSPORT ================= -->
 <section class="section" id="documents">
   <div class="wrap">
     <div class="sec-head rv">
-      <span class="sec-tag">Annexe 5</span>
-      <h2>Documents d'identification</h2>
-      <p>Les pièces admises pour constituer votre dossier et vous présenter à l'examen.</p>
+      <span class="sec-tag">Titres sécurisés</span>
+      <h2>Documents officiels du transport routier</h2>
+      <p>Des titres de transport infalsifiables, dotés des dernières technologies de sécurité physique et numérique — produits sous l'autorité du Ministère des Transports.</p>
     </div>
-    <div class="docs-grid">
-      <div class="doc-id rv">
-        <div class="thumb"><div class="big-ico">🪪</div></div>
-        <div class="body"><h4>Carte Nationale d'Identité</h4><p>Biométrique ou ancienne version, en cours de validité. La pièce d'identité de référence.</p></div>
+    <div class="qup-grid">
+      <div class="qup-card rv">
+        <div class="qup-ico">🚗</div>
+        <h4>Permis de Conduire</h4>
+        <p>Attestation délivrée par l'autorité administrative compétente à une personne pour conduire sur la voie routière ouverte à la circulation publique, un véhicule correspondant à la catégorie indiquée.</p>
+        <span class="ref">Décret n° 2016-864 du 03 novembre 2016</span>
+        <button class="btn-details" data-doc="permis">Détails →</button>
       </div>
-      <div class="doc-id rv">
-        <div class="thumb"><div class="big-ico">🛂</div></div>
-        <div class="body"><h4>Passeport</h4><p>Diplomatique, ordinaire ou de service — accepté comme pièce d'identification.</p></div>
+      <div class="qup-card rv">
+        <div class="qup-ico">🚙</div>
+        <h4>Carte Grise</h4>
+        <p>Certificat d'immatriculation obligatoire qui identifie le véhicule et son propriétaire. Tout véhicule dont le PTAC dépasse 750 kg doit être immatriculé avant sa mise en circulation.</p>
+        <span class="ref">Code de la route — Décret n° 2016-864</span>
+        <button class="btn-details" data-doc="grise">Détails →</button>
       </div>
-      <div class="doc-id rv">
-        <div class="thumb"><div class="big-ico">🏛️</div></div>
-        <div class="body"><h4>Carte consulaire &amp; carte de séjour</h4><p>Pour les ressortissants étrangers résidant en Côte d'Ivoire.</p></div>
+      <div class="qup-card rv">
+        <div class="qup-ico">🚌</div>
+        <h4>Carte de Transport</h4>
+        <p>Elle facilite l'identification des acteurs du transport et permet à l'autorité de régulation d'exercer plus efficacement son rôle, au bénéfice des usagers et des professionnels du secteur.</p>
+        <button class="btn-details" data-doc="transport">Détails →</button>
       </div>
-      <div class="doc-id rv">
-        <div class="thumb"><div class="big-ico">📄</div></div>
-        <div class="body"><h4>Extrait de naissance</h4><p>Pour les mineurs ou à défaut de CNI.</p></div>
+      <div class="qup-card rv">
+        <div class="qup-ico">🧑‍✈️</div>
+        <h4>CACR <span class="pro">PRO</span></h4>
+        <p>Certificat d'Aptitude du Conducteur Routier : exigé de toute personne désirant faire de la conduite automobile sa profession. Délivré par les services compétents du Ministère des Transports.</p>
+        <button class="btn-details" data-doc="cacr">Détails →</button>
       </div>
-      <div class="doc-id rv">
-        <div class="thumb"><img src="/img/digitaux.jpg" alt="Prise des empreintes digitales"></div>
-        <div class="body"><h4>Empreintes digitales</h4><p>Prise des digitaux obligatoire lors de l'enrôlement du candidat.</p></div>
-      </div>
-      <div class="doc-id rv">
-        <div class="thumb"><img src="/img/cacr.jpg" alt="Certificat d'aptitude du conducteur routier"></div>
-        <div class="body"><h4>CACR <span style="font-size:10px;color:var(--green);border:1px solid rgba(34,197,94,.4);padding:2px 8px;border-radius:100px;">PRO</span></h4><p>Certificat d'Aptitude du Conducteur Routier — obligatoire pour faire de la conduite sa profession. Exige un permis B, C, D ou E valide + formation en centre agréé.</p></div>
-      </div>
-      <div class="doc-id rv">
-        <div class="thumb"><div class="big-ico">📱</div></div>
-        <div class="body"><h4>Permis digital — CGI Digital</h4><p>Le permis de conduire digital complète le permis physique : accès sécurisé et permanent depuis un smartphone via l'application CGI Digital (Arrêté n°0015 du 28 mars 2019).</p></div>
-      </div>
-      <div class="doc-id rv">
-        <div class="thumb"><div class="big-ico">🚗</div></div>
-        <div class="body"><h4>Carte grise</h4><p>Certificat d'immatriculation obligatoire : tout véhicule de PTAC supérieur à 750 kg doit être immatriculé avant sa mise en circulation.</p></div>
-      </div>
-      <div class="doc-id rv">
-        <div class="thumb"><img src="/img/ct.jpg" alt="Contrôle technique du véhicule"></div>
-        <div class="body"><h4>Contrôle technique</h4><p>Le véhicule de conduite doit être en règle et présenter un contrôle technique valide.</p></div>
-      </div>
-      <div class="doc-id rv">
-        <div class="thumb"><div class="big-ico">🩺</div></div>
-        <div class="body"><h4>Certificat médical</h4><p>Aptitude physique et mentale à la conduite, délivré par un médecin agréé.</p></div>
+      <div class="qup-card rv">
+        <div class="qup-ico">📱</div>
+        <h4>Documents Digitaux</h4>
+        <p>Le permis de conduire digital complète le permis physique : accès sécurisé, simple et permanent depuis un smartphone via l'application CGI Digital. À terme, un portefeuille numérique regroupera tous les titres de transport.</p>
+        <span class="ref">Arrêté n°0015 du 28 mars 2019 · déployé depuis février 2026</span>
+        <button class="btn-details" data-doc="digital">Détails →</button>
       </div>
     </div>
   </div>
 </section>
+
+<!-- ================= MODALE DÉTAILS ================= -->
+<div class="qup-modal" id="qupModal" role="dialog" aria-modal="true">
+  <div class="box">
+    <button class="close" id="qupClose" aria-label="Fermer">✕</button>
+    <div class="m-ico" id="mIco"></div>
+    <div class="m-label">Description</div>
+    <h3 id="mTitle"></h3>
+    <p class="m-desc" id="mDesc"></p>
+    <div id="mStepsWrap">
+      <div class="m-steps-label">🧭 Comment l'obtenir ?</div>
+      <ol class="m-steps" id="mSteps"></ol>
+    </div>
+    <a class="m-pdf" id="mPdf" href="#" target="_blank" rel="noopener" style="display:none">📄 Télécharger la fiche procédure (PDF)</a>
+  </div>
+</div>
 
 <!-- ================= CATÉGORIES + QUIZ ================= -->
 <section class="section" id="categories" style="background:linear-gradient(180deg,transparent,rgba(16,22,39,0.5) 20%,rgba(16,22,39,0.5) 80%,transparent)">
@@ -1120,6 +1201,76 @@ document.addEventListener('visibilitychange', () => {
     requestAnimationFrame(step);
   }, { threshold: 0.4 });
   gio.observe(document.querySelector('.gauge-card'));
+
+  /* ===== MODALES DÉTAILS (documents officiels) ===== */
+  const DOCS = {
+    permis: {
+      ico: '🚗', title: 'Permis de Conduire',
+      desc: "Le permis de conduire est une attestation délivrée par l'autorité administrative compétente à une personne pour conduire sur la voie routière ouverte à la circulation publique, un véhicule correspondant à la catégorie indiquée. (Décret n° 2016-864 du 03 novembre 2016 portant réglementation de l'usage des voies routières ouvertes à la circulation publique).",
+      steps: [
+        "S'inscrire dans une auto-école agréée pour suivre la formation théorique et pratique.",
+        "Effectuer la visite médicale d'aptitude obligatoire dans un centre de santé agréé ou au CGI.",
+        "Réussir les examens théorique (code de la route) et pratique de conduite.",
+        "Se rendre dans un centre de Gestion Intégré (CGI) pour l'enrôlement des données biométriques et l'édition du titre."
+      ],
+      pdf: 'https://pub-244db5ba25fb4292b437c1e1a7970d00.r2.dev/media/FLYER-OBTENTION-DU-PERMIS-CONDUIRE.pdf'
+    },
+    grise: {
+      ico: '🚙', title: 'Carte Grise',
+      desc: "La carte grise ou encore certificat d'immatriculation est un document obligatoire qui permet d'identifier un véhicule et de donner des informations sur son propriétaire. Selon le code de la route (Décret n°2016-864 du 03 novembre 2016), tout véhicule dont le poids total autorisé en charge est supérieur à 750 kg doit préalablement être immatriculé avant sa mise en circulation. Cette opération donne droit à un certificat d'immatriculation dit CARTE GRISE qui lie le véhicule à son propriétaire.",
+      steps: null,
+      pdf: 'https://pub-244db5ba25fb4292b437c1e1a7970d00.r2.dev/media/FLYER-OBTENTION-CARTE-GRISE.pdf'
+    },
+    transport: {
+      ico: '🚌', title: 'Carte de Transport',
+      desc: "L'introduction de la Carte de Transport et de transporteur représente une avancée significative, bénéfique tant pour les usagers que pour les professionnels du secteur. Elle facilite l'identification des acteurs du transport et permet à l'autorité de régulation d'exercer plus efficacement son rôle, contribuant ainsi à résoudre les problèmes récurrents qui ont perturbé le secteur des transports en Côte d'Ivoire.",
+      steps: null, pdf: null
+    },
+    cacr: {
+      ico: '🧑‍✈️', title: 'CACR',
+      desc: "Le CACR (Certificat d'Aptitude du Conducteur Routier) est un document administratif du transport routier délivré par les services compétents du Ministère des transports à tout conducteur de véhicule de transport routier, à la suite d'une demande faite à cet effet.",
+      steps: [
+        "Justifier d'un permis de conduire B, C, D ou E en cours de validité.",
+        "Obtenir une attestation de formation de conducteur routier délivrée par un centre agréé de formation professionnelle.",
+        "Déposer la demande auprès des services compétents du Ministère des Transports."
+      ],
+      pdf: null
+    },
+    digital: {
+      ico: '📱', title: 'Documents Digitaux',
+      desc: "Les documents digitaux constituent une étape majeure de la transformation numérique des services du transport. À terme, elle sera étendue à tous les documents administratifs, tels que la carte grise et les cartes de transport, permettant aux usagers de disposer d'un portefeuille numérique regroupant l'ensemble de leurs titres de transport.",
+      steps: [
+        "Télécharger l'application CGI Digital sur smartphone.",
+        "Créer un compte et s'authentifier de manière sécurisée.",
+        "Accessible aux nouveaux conducteurs déclarés aptes aux examens du code et de la conduite (Arrêté n°0015 du 28 mars 2019, déployé depuis février 2026)."
+      ],
+      pdf: null
+    }
+  };
+  const modal = document.getElementById('qupModal');
+  const mIco = document.getElementById('mIco'), mTitle = document.getElementById('mTitle'),
+        mDesc = document.getElementById('mDesc'), mSteps = document.getElementById('mSteps'),
+        mStepsWrap = document.getElementById('mStepsWrap'), mPdf = document.getElementById('mPdf');
+  function openDoc(key) {
+    const d = DOCS[key]; if (!d) return;
+    mIco.textContent = d.ico;
+    mTitle.textContent = d.title;
+    mDesc.textContent = d.desc;
+    if (d.steps && d.steps.length) {
+      mStepsWrap.style.display = '';
+      mSteps.innerHTML = d.steps.map(x => '<li><span>' + x + '</span></li>').join('');
+    } else {
+      mStepsWrap.style.display = 'none';
+    }
+    if (d.pdf) { mPdf.href = d.pdf; mPdf.style.display = ''; } else { mPdf.style.display = 'none'; }
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDoc() { modal.classList.remove('open'); document.body.style.overflow = ''; }
+  document.querySelectorAll('.btn-details').forEach(b => b.addEventListener('click', () => openDoc(b.dataset.doc)));
+  document.getElementById('qupClose').addEventListener('click', closeDoc);
+  modal.addEventListener('click', e => { if (e.target === modal) closeDoc(); });
+  addEventListener('keydown', e => { if (e.key === 'Escape') closeDoc(); });
 
   /* ===== PARALLAX ===== */
   const permisCard = document.getElementById('permisCard');
