@@ -29,9 +29,22 @@
     body { background:var(--bg); color:var(--text); font-family:'Outfit',sans-serif; overflow-x:hidden; }
     ::selection { background:var(--yellow); color:#111; }
 
-    /* ============ CANVAS 3D ============ */
-    #hero-3d { position:fixed; inset:0; z-index:0; display:block; will-change:transform; }
-    #hero-3d canvas { display:block; }
+    /* ============ FOND HERO : IMAGE PERMIS B ============ */
+    #hero-bg { position:fixed; inset:0; z-index:0; overflow:hidden; will-change:transform; }
+    #hero-bg .bg-img {
+      position:absolute; inset:-4%;
+      background: url('/img/permis_b.jpg') center / cover no-repeat;
+      animation: kenburns 24s ease-in-out infinite;
+    }
+    #hero-bg::after {
+      content:''; position:absolute; inset:0;
+      background: linear-gradient(180deg, rgba(7,10,18,0.85) 0%, rgba(7,10,18,0.28) 30%, rgba(7,10,18,0.38) 62%, rgba(7,10,18,0.94) 100%);
+    }
+    @keyframes kenburns {
+      0%   { transform: scale(1.02) translate(0, 0); }
+      50%  { transform: scale(1.1) translate(-1.2%, -1%); }
+      100% { transform: scale(1.02) translate(0, 0); }
+    }
 
     /* ============ NAV ============ */
     .nav {
@@ -112,22 +125,6 @@
     .mouse { width:26px; height:42px; border:2px solid rgba(255,255,255,0.5); border-radius:14px; position:relative; }
     .mouse::after { content:''; position:absolute; left:50%; top:7px; width:4px; height:8px; background:var(--yellow); border-radius:3px; transform:translateX(-50%); animation:wheel 1.6s infinite; }
 
-    /* Carte permis flottante (parallax souris) — placée sous le titre */
-    .permis-float {
-      position:absolute; right:5%; top:31%; width:min(380px,30vw); z-index:4;
-      border-radius:20px; overflow:hidden;
-      border:1px solid rgba(255,255,255,0.25);
-      box-shadow:0 30px 80px rgba(0,0,0,0.6), 0 0 60px rgba(245,165,36,0.12);
-      transform:rotate(4deg); will-change:transform;
-      animation:cardIn 1.4s .5s both;
-    }
-    .permis-float img { display:block; width:100%; }
-    .permis-float .tag {
-      position:absolute; left:14px; bottom:14px; background:rgba(7,10,18,0.85); backdrop-filter:blur(8px);
-      border:1px solid rgba(245,165,36,0.5); color:var(--yellow);
-      font-weight:800; font-size:13px; padding:8px 14px; border-radius:100px; letter-spacing:.5px;
-    }
-    @media (max-width: 900px) { .permis-float { display:none; } }
 
     /* ============ SECTIONS ============ */
     main { position:relative; z-index:10; }
@@ -457,8 +454,8 @@
   <button class="burger" id="burger" aria-label="Menu"><span></span><span></span><span></span></button>
 </nav>
 
-<!-- ================= SCÈNE 3D (boucle 15s) ================= -->
-<div id="hero-3d"></div>
+<!-- ================= FOND : IMAGE PERMIS B ================= -->
+<div id="hero-bg"><div class="bg-img"></div></div>
 
 <!-- ================= HERO ================= -->
 <header class="hero" id="top">
@@ -468,10 +465,6 @@
     <a href="/quiz.html" class="btn btn-primary">📝 Tester le quiz code</a>
   </div>
   <div class="scroll-hint"><div class="mouse"></div>Découvrir</div>
-  <div class="permis-float" id="permisCard">
-    <img src="/img/permis_b.jpg" alt="Permis de conduire catégorie B - Côte d'Ivoire">
-    <span class="tag">🏆 Catégorie B — Véhicules légers</span>
-  </div>
 </header>
 
 <main>
@@ -833,332 +826,6 @@
   <p style="margin-top:2px">© 2026 SIGEXPC. Tous droits réservés.</p>
 </footer>
 
-<!-- ================= THREE.JS : ROUTE 3D — BOUCLE PARFAITE 15s ================= -->
-<script type="importmap">
-{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
-</script>
-<script type="module">
-import * as THREE from 'three';
-
-const container = document.getElementById('hero-3d');
-const renderer = new THREE.WebGLRenderer({ antialias:true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.setSize(innerWidth, innerHeight);
-container.appendChild(renderer.domElement);
-
-const scene = new THREE.Scene();
-
-/* ---------- Ciel jour ---------- */
-const skyCanvas = document.createElement('canvas'); skyCanvas.width = 8; skyCanvas.height = 256;
-const skx = skyCanvas.getContext('2d');
-const grad = skx.createLinearGradient(0, 0, 0, 256);
-grad.addColorStop(0, '#2f6fd8'); grad.addColorStop(0.45, '#7db4ee'); grad.addColorStop(0.8, '#cfe6fb'); grad.addColorStop(1, '#eef6fd');
-skx.fillStyle = grad; skx.fillRect(0, 0, 8, 256);
-const sky = new THREE.Mesh(
-  new THREE.SphereGeometry(600, 24, 16),
-  new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(skyCanvas), side: THREE.BackSide })
-);
-scene.add(sky);
-
-const sun = new THREE.Mesh(new THREE.SphereGeometry(16, 20, 20), new THREE.MeshBasicMaterial({ color: 0xfff3c4 }));
-sun.position.set(-110, 150, -320); scene.add(sun);
-const halo = new THREE.Mesh(new THREE.SphereGeometry(32, 20, 20), new THREE.MeshBasicMaterial({ color: 0xffe9a0, transparent:true, opacity:0.28 }));
-halo.position.copy(sun.position); scene.add(halo);
-
-function cloudTexture() {
-  const c = document.createElement('canvas'); c.width = 256; c.height = 128;
-  const x = c.getContext('2d');
-  for (let i = 0; i < 16; i++) {
-    const cx = 30 + Math.random() * 196, cy = 50 + Math.random() * 40, r = 14 + Math.random() * 26;
-    const g = x.createRadialGradient(cx, cy, 2, cx, cy, r);
-    g.addColorStop(0, 'rgba(255,255,255,0.85)'); g.addColorStop(1, 'rgba(255,255,255,0)');
-    x.fillStyle = g; x.beginPath(); x.arc(cx, cy, r, 0, 7); x.fill();
-  }
-  return new THREE.CanvasTexture(c);
-}
-const clouds = [];
-for (let i = 0; i < 9; i++) {
-  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: cloudTexture(), transparent:true, opacity: 0.5 + Math.random()*0.3, depthWrite:false }));
-  sp.position.set((Math.random()-0.5)*440, 60 + Math.random()*60, -140 - Math.random()*420);
-  sp.scale.set(90 + Math.random()*90, 40 + Math.random()*36, 1);
-  clouds.push(sp); scene.add(sp);
-}
-
-/* ---------- Caméra & lumières ---------- */
-const camera = new THREE.PerspectiveCamera(62, innerWidth/innerHeight, 0.1, 1200);
-camera.position.set(0, 7.5, 14);
-scene.add(new THREE.HemisphereLight(0xbcd8ff, 0x5a6b4a, 1.05));
-const dirLight = new THREE.DirectionalLight(0xfff2d0, 1.2);
-dirLight.position.set(-40, 70, -30); scene.add(dirLight);
-
-/* ---------- Route (goudron) ---------- */
-const ROAD_W = 16, SEG_LEN = 30, SEG_COUNT = 14;
-const TOTAL = SEG_LEN * SEG_COUNT; // 420 unités / boucle
-
-function asphaltTexture() {
-  const c = document.createElement('canvas'); c.width = 256; c.height = 256;
-  const x = c.getContext('2d');
-  x.fillStyle = '#3c4048'; x.fillRect(0, 0, 256, 256);
-  for (let i = 0; i < 2600; i++) {
-    const g = 40 + Math.random()*50;
-    x.fillStyle = `rgba(${g},${g},${g+4},${0.16 + Math.random()*0.2})`;
-    x.fillRect(Math.random()*256, Math.random()*256, 2, 2);
-  }
-  const t = new THREE.CanvasTexture(c);
-  t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(3, 90);
-  return t;
-}
-const asphalt = asphaltTexture();
-const road = new THREE.Mesh(
-  new THREE.PlaneGeometry(ROAD_W, TOTAL),
-  new THREE.MeshStandardMaterial({ map: asphalt, roughness: 0.95 })
-);
-road.rotation.x = -Math.PI/2;
-road.position.z = -TOTAL/2 + 20;
-scene.add(road);
-
-function stripe(w, color) {
-  return new THREE.Mesh(new THREE.PlaneGeometry(w, TOTAL), new THREE.MeshBasicMaterial({ color }));
-}
-const lineL = stripe(0.3, 0xffffff); lineL.rotation.x = -Math.PI/2; lineL.position.set(-ROAD_W/2 + 0.8, 0.02, road.position.z); scene.add(lineL);
-const lineR = stripe(0.3, 0xffffff); lineR.rotation.x = -Math.PI/2; lineR.position.set(ROAD_W/2 - 0.8, 0.02, road.position.z); scene.add(lineR);
-
-/* Ligne centrale pointillée */
-const dashes = [];
-const dashGeo = new THREE.PlaneGeometry(0.35, 5);
-const dashMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-for (let i = 0; i < Math.ceil(TOTAL/5) + 8; i++) {
-  const d = new THREE.Mesh(dashGeo, dashMat);
-  d.rotation.x = -Math.PI/2;
-  d.position.set(0, 0.02, 16 - i * 5);
-  dashes.push(d); scene.add(d);
-}
-
-/* Passage piéton sur le goudron */
-function zebra() {
-  const g = new THREE.Group();
-  for (let i = -6; i <= 6; i++) {
-    const s = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 6.5), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-    s.rotation.x = -Math.PI/2; s.position.set(i * 1.25, 0.025, 0);
-    g.add(s);
-  }
-  return g;
-}
-const zebra1 = zebra(); zebra1.position.z = -95;
-const zebra2 = zebra(); zebra2.position.z = -305;
-scene.add(zebra1, zebra2);
-
-/* Flèches peintes sur le goudron */
-function arrowPaint() {
-  const c = document.createElement('canvas'); c.width = 128; c.height = 256;
-  const x = c.getContext('2d');
-  x.fillStyle = '#ffffff';
-  x.fillRect(52, 90, 24, 166);
-  x.beginPath(); x.moveTo(64, 6); x.lineTo(112, 96); x.lineTo(16, 96); x.closePath(); x.fill();
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 5.2),
-    new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true }));
-  m.rotation.x = -Math.PI/2; m.rotation.z = Math.PI;
-  m.position.set(-3.6, 0.025, 0);
-  return m;
-}
-const arrows = [-60, -160, -260, -360].map(z => { const a = arrowPaint(); a.position.z = z; scene.add(a); return a; });
-
-/* ---------- Accotements verts + arbres ---------- */
-const gc = document.createElement('canvas'); gc.width = 64; gc.height = 64;
-{
-  const x = gc.getContext('2d');
-  x.fillStyle = '#4e8f4a'; x.fillRect(0, 0, 64, 64);
-  for (let i = 0; i < 300; i++) { x.fillStyle = `rgba(${40+Math.random()*40},${110+Math.random()*50},${45+Math.random()*30},0.5)`; x.fillRect(Math.random()*64, Math.random()*64, 2, 2); }
-}
-const grassTex = new THREE.CanvasTexture(gc);
-grassTex.wrapS = grassTex.wrapT = THREE.RepeatWrapping; grassTex.repeat.set(60, 200);
-const grass = new THREE.Mesh(new THREE.PlaneGeometry(900, TOTAL),
-  new THREE.MeshStandardMaterial({ map: grassTex, roughness: 1 }));
-grass.rotation.x = -Math.PI/2; grass.position.set(0, -0.06, road.position.z);
-scene.add(grass);
-
-const treeTrunkMat = new THREE.MeshStandardMaterial({ color: 0x6b4a2c, roughness: 1 });
-const treeLeafMats = [0x2f7d33, 0x3f9b43, 0x276e2c].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 1 }));
-const trees = [];
-for (let i = 0; i < 46; i++) {
-  const g = new THREE.Group();
-  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 2.4, 6), treeTrunkMat);
-  trunk.position.y = 1.2; g.add(trunk);
-  const leaves = new THREE.Mesh(new THREE.ConeGeometry(1.7 + Math.random(), 3.4 + Math.random()*1.6, 7), treeLeafMats[i % 3]);
-  leaves.position.y = 3.8; g.add(leaves);
-  const side = i % 2 === 0 ? -1 : 1;
-  g.position.set(side * (14 + Math.random()*26), 0, 12 - Math.random() * TOTAL);
-  const s = 0.8 + Math.random()*0.9; g.scale.set(s, s, s);
-  trees.push(g); scene.add(g);
-}
-
-/* ---------- PANNEAUX (textures canvas réalistes) ---------- */
-function signCanvas(draw) {
-  const c = document.createElement('canvas'); c.width = 256; c.height = 256;
-  draw(c.getContext('2d'));
-  const t = new THREE.CanvasTexture(c);
-  t.anisotropy = 4;
-  return t;
-}
-const TEX = {
-  stop: signCanvas(x => {
-    x.beginPath();
-    for (let i = 0; i < 8; i++) { const a = Math.PI/8 + i * Math.PI/4; const px = 128 + Math.cos(a)*118, py = 128 + Math.sin(a)*118; i ? x.lineTo(px, py) : x.moveTo(px, py); }
-    x.closePath(); x.fillStyle = '#d92b2b'; x.fill(); x.strokeStyle = '#fff'; x.lineWidth = 10; x.stroke();
-    x.fillStyle = '#fff'; x.font = '900 72px Arial'; x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillText('STOP', 128, 132);
-  }),
-  limit50: signCanvas(x => {
-    x.beginPath(); x.arc(128, 128, 120, 0, 7); x.fillStyle = '#d92b2b'; x.fill();
-    x.beginPath(); x.arc(128, 128, 96, 0, 7); x.fillStyle = '#fff'; x.fill();
-    x.fillStyle = '#111'; x.textAlign = 'center';
-    x.font = '900 86px Arial'; x.fillText('50', 128, 116);
-    x.font = '700 34px Arial'; x.fillText('km/h', 128, 176);
-  }),
-  limit90: signCanvas(x => {
-    x.beginPath(); x.arc(128, 128, 120, 0, 7); x.fillStyle = '#d92b2b'; x.fill();
-    x.beginPath(); x.arc(128, 128, 96, 0, 7); x.fillStyle = '#fff'; x.fill();
-    x.fillStyle = '#111'; x.textAlign = 'center';
-    x.font = '900 86px Arial'; x.fillText('90', 128, 116);
-    x.font = '700 34px Arial'; x.fillText('km/h', 128, 176);
-  }),
-  yield: signCanvas(x => {
-    x.beginPath(); x.moveTo(128, 240); x.lineTo(246, 30); x.lineTo(10, 30); x.closePath();
-    x.fillStyle = '#d92b2b'; x.fill();
-    x.beginPath(); x.moveTo(128, 196); x.lineTo(214, 52); x.lineTo(42, 52); x.closePath();
-    x.fillStyle = '#fff'; x.fill();
-  }),
-  noentry: signCanvas(x => {
-    x.beginPath(); x.arc(128, 128, 120, 0, 7); x.fillStyle = '#d92b2b'; x.fill();
-    x.fillStyle = '#fff'; x.fillRect(38, 108, 180, 40);
-  }),
-  danger: signCanvas(x => {
-    x.beginPath(); x.moveTo(128, 12); x.lineTo(248, 232); x.lineTo(8, 232); x.closePath();
-    x.fillStyle = '#fff'; x.fill(); x.lineWidth = 22; x.strokeStyle = '#d92b2b'; x.stroke();
-    x.fillStyle = '#111'; x.font = '900 120px Arial'; x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillText('!', 128, 190);
-  }),
-  ped: signCanvas(x => {
-    x.beginPath(); x.moveTo(128, 12); x.lineTo(248, 232); x.lineTo(8, 232); x.closePath();
-    x.fillStyle = '#fff'; x.fill(); x.lineWidth = 22; x.strokeStyle = '#d92b2b'; x.stroke();
-    x.fillStyle = '#111';
-    x.beginPath(); x.arc(128, 88, 14, 0, 7); x.fill();
-    x.lineWidth = 13; x.strokeStyle = '#111'; x.lineCap = 'round';
-    x.beginPath(); x.moveTo(128, 102); x.lineTo(124, 152); x.stroke();
-    x.beginPath(); x.moveTo(124, 152); x.lineTo(102, 220); x.stroke();
-    x.beginPath(); x.moveTo(124, 152); x.lineTo(152, 220); x.stroke();
-    x.beginPath(); x.moveTo(126, 112); x.lineTo(96, 140); x.stroke();
-    x.beginPath(); x.moveTo(126, 112); x.lineTo(160, 132); x.stroke();
-  })
-};
-
-const poleMat = new THREE.MeshStandardMaterial({ color: 0x9aa2ad, roughness: 0.5, metalness: 0.55 });
-function makeSign(tex, z, side, scl = 1) {
-  const g = new THREE.Group();
-  const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.11, 3.4, 8), poleMat);
-  pole.position.y = 1.7; g.add(pole);
-  const panel = new THREE.Mesh(new THREE.PlaneGeometry(2.3*scl, 2.3*scl),
-    new THREE.MeshStandardMaterial({ map: tex, roughness: 0.6, side: THREE.DoubleSide }));
-  panel.position.y = 3.4 + 1.05*scl;
-  g.add(panel);
-  g.position.set(side * (ROAD_W/2 + 1.6), 0, z);
-  return g;
-}
-const SIGNS = [
-  { tex: TEX.limit50, z: -28, side: -1 },
-  { tex: TEX.danger,  z: -55, side: 1 },
-  { tex: TEX.stop,    z: -85, side: -1, scl: 1.1 },
-  { tex: TEX.ped,     z: -120, side: 1 },
-  { tex: TEX.limit90, z: -150, side: -1 },
-  { tex: TEX.yield,   z: -180, side: 1 },
-  { tex: TEX.noentry, z: -215, side: -1 },
-  { tex: TEX.danger,  z: -245, side: 1 },
-  { tex: TEX.limit50, z: -275, side: -1 },
-  { tex: TEX.ped,     z: -335, side: 1, scl: 0.95 },
-  { tex: TEX.stop,    z: -365, side: -1 },
-  { tex: TEX.limit90, z: -395, side: 1 },
-];
-const signGroups = SIGNS.map(s => { const g = makeSign(s.tex, s.z, s.side, s.scl || 1); scene.add(g); return g; });
-
-/* ---------- Voiture (vue arrière) ---------- */
-const car = new THREE.Group();
-const body = new THREE.Mesh(new THREE.BoxGeometry(4.4, 1.35, 2.2), new THREE.MeshStandardMaterial({ color: 0xe8eaee, roughness: 0.35, metalness: 0.45 }));
-body.position.y = 1.05; car.add(body);
-const cabin = new THREE.Mesh(new THREE.BoxGeometry(3.1, 1.05, 2.0), new THREE.MeshStandardMaterial({ color: 0x18222f, roughness: 0.2, metalness: 0.6 }));
-cabin.position.y = 2.1; car.add(cabin);
-const wheelGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.42, 14);
-const wheelMat = new THREE.MeshStandardMaterial({ color: 0x17181c, roughness: 0.9 });
-[[-2.2, 0.55, 1.15], [2.2, 0.55, 1.15], [-2.2, 0.55, -1.15], [2.2, 0.55, -1.15]].forEach(p => {
-  const w = new THREE.Mesh(wheelGeo, wheelMat);
-  w.rotation.x = Math.PI/2; w.position.set(...p); car.add(w);
-});
-const brakeMat = new THREE.MeshBasicMaterial({ color: 0xff3b30 });
-const brakeL = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.28, 0.1), brakeMat); brakeL.position.set(-1.45, 1.05, 1.13); car.add(brakeL);
-const brakeR = brakeL.clone(); brakeR.position.x = 1.45; car.add(brakeR);
-car.position.set(-3.4, 0, -13);
-scene.add(car);
-
-/* ---------- BOUCLE 15 secondes ---------- */
-const LOOP = 15;
-const SPEED = TOTAL / LOOP; // exactement une longueur totale par boucle => seamless
-const clock = new THREE.Clock();
-let mouseX = 0, mouseY = 0;
-addEventListener('pointermove', e => {
-  mouseX = (e.clientX / innerWidth - 0.5) * 2;
-  mouseY = (e.clientY / innerHeight - 0.5) * 2;
-}, { passive: true });
-
-function recycle(obj) {
-  if (obj.position.z > 26) obj.position.z -= TOTAL;
-}
-
-function animate() {
-  requestAnimationFrame(animate);
-  const dt = Math.min(clock.getDelta(), 0.05);
-  const dz = SPEED * dt;
-  const t = clock.elapsedTime;
-
-  dashes.forEach(d => { d.position.z += dz; recycle(d); });
-  zebra1.position.z += dz; recycle(zebra1);
-  zebra2.position.z += dz; recycle(zebra2);
-  arrows.forEach(a => { a.position.z += dz; recycle(a); });
-  trees.forEach(tr => { tr.position.z += dz; recycle(tr); });
-  signGroups.forEach(s => { s.position.z += dz; recycle(s); });
-
-  // le goudron défile
-  asphalt.offset.y -= dz / 4.67;
-  grassTex.offset.y -= dz * 0.011;
-
-  // nuages
-  clouds.forEach((c, i) => { c.position.x += (0.3 + (i % 3) * 0.15) * dt * 2; if (c.position.x > 260) c.position.x = -260; });
-
-  // voiture
-  car.position.y = Math.sin(t * 7) * 0.03;
-  car.position.x = -3.4 + Math.sin(t * 0.5) * 0.7;
-  brakeMat.color.setHex(Math.sin(t * 3) > 0.6 ? 0xff1512 : 0x8b100c);
-
-  // caméra : parallax souris + roulis doux
-  const px = mouseX * 2.4, py = -mouseY * 1.2;
-  camera.position.x += (px - camera.position.x) * 0.045;
-  camera.position.y += ((7.5 + py) - camera.position.y) * 0.045;
-  camera.position.z = 14 + Math.sin(t * 1.2) * 0.3;
-  camera.lookAt(camera.position.x * 0.3, 4 + Math.sin(t * 0.8) * 0.15, -42);
-
-  renderer.render(scene, camera);
-}
-animate();
-
-addEventListener('resize', () => {
-  camera.aspect = innerWidth / innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-});
-document.addEventListener('visibilitychange', () => {
-  if (document.hidden) clock.stop(); else clock.start();
-});
-</script>
-
 <!-- ================= UI : nav, tabs, reveal, parallax, jauge ================= -->
 <script>
 (function () {
@@ -1273,8 +940,7 @@ document.addEventListener('visibilitychange', () => {
   addEventListener('keydown', e => { if (e.key === 'Escape') closeDoc(); });
 
   /* ===== PARALLAX ===== */
-  const permisCard = document.getElementById('permisCard');
-  const hero3d = document.getElementById('hero-3d');
+  const heroBg = document.getElementById('hero-bg');
   let mx = 0, my = 0, cmx = 0, cmy = 0;
   addEventListener('pointermove', e => {
     mx = (e.clientX / innerWidth - 0.5);
@@ -1292,8 +958,7 @@ document.addEventListener('visibilitychange', () => {
     if (y < innerHeight * 1.1) {
       hero.style.transform = `translateY(${y * 0.36}px)`;
       hero.style.opacity = Math.max(0, 1 - y / (innerHeight * 0.8));
-      if (permisCard) permisCard.style.transform = `rotate(4deg) translate(${cmx * -30}px, ${cmy * -20 + y * 0.2}px)`;
-      hero3d.style.transform = `translate(${cmx * -12}px, ${cmy * -7}px) scale(1.045)`;
+      heroBg.style.transform = `translate(${cmx * -16}px, ${cmy * -9}px)`;
     }
     floats.forEach((f, i) => {
       const r = f.getBoundingClientRect();
