@@ -203,6 +203,44 @@
     .amende { font-family:'Space Grotesk'; font-weight:700; color:#dbe4f3; white-space:nowrap; }
     .delit { color:#f87171 !important; font-size:13.5px; }
 
+    /* ============ PROCÉDURE (timeline) ============ */
+    .steps { position:relative; max-width:760px; margin:0 auto; }
+    .steps::before {
+      content:''; position:absolute; left:27px; top:20px; bottom:20px; width:3px;
+      background:linear-gradient(180deg,var(--green),var(--yellow) 45%,var(--orange));
+      border-radius:3px;
+    }
+    .step {
+      position:relative; display:flex; gap:22px; align-items:flex-start;
+      padding:0 0 30px 0;
+    }
+    .step:last-child { padding-bottom:0; }
+    .step .n {
+      flex:none; width:56px; height:56px; border-radius:50%; z-index:1;
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Space Grotesk'; font-weight:700; font-size:21px;
+      background:var(--surface2); border:2px solid rgba(245,165,36,0.5); color:var(--yellow);
+      box-shadow:0 0 0 6px var(--bg);
+    }
+    .step.done .n { background:linear-gradient(135deg,var(--yellow),var(--orange)); color:#181104; border-color:transparent; }
+    .step .body { background:var(--surface); border:1px solid var(--border); border-radius:18px; padding:20px 24px; flex:1; transition:all .3s; }
+    .step .body:hover { border-color:rgba(245,165,36,0.4); transform:translateX(6px); }
+    .step h4 { font-size:16.5px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .step p { color:var(--muted); font-size:14px; margin-top:7px; line-height:1.6; }
+    .step .ico { font-size:20px; }
+    .step .pill {
+      font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase;
+      padding:3px 10px; border-radius:100px;
+    }
+    .pill.code { background:rgba(59,130,246,0.14); color:#7fb0fa; border:1px solid rgba(59,130,246,0.35); }
+    .pill.cond { background:rgba(34,197,94,0.13); color:#4ade80; border:1px solid rgba(34,197,94,0.35); }
+    .pill.exam { background:rgba(245,165,36,0.13); color:var(--yellow); border:1px solid rgba(245,165,36,0.4); }
+    @media (max-width:640px) {
+      .steps::before { left:20px; }
+      .step .n { width:42px; height:42px; font-size:16px; }
+      .step { gap:14px; }
+    }
+
     /* ============ DOSSIERS (tabs) ============ */
     .tabs { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:40px; }
     .tab {
@@ -272,16 +310,22 @@
     }
     .cat-card:hover { transform:translateY(-8px) scale(1.02); }
     .cat-card .letter {
-      font-family:'Space Grotesk'; font-size:74px; font-weight:700; line-height:1;
+      font-family:'Space Grotesk'; font-size:54px; font-weight:700; line-height:1;
       background:linear-gradient(135deg,#ffd675,var(--orange)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
     }
-    .cat-card h4 { font-size:16.5px; margin-top:12px; }
+    .cat-card h4 { font-size:16.5px; margin-top:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
     .cat-card p { color:var(--muted); font-size:13px; margin-top:7px; line-height:1.55; }
+    .cat-card .age {
+      font-size:11px; font-weight:800; letter-spacing:.5px; padding:4px 10px; border-radius:100px;
+      background:rgba(34,197,94,0.13); color:#4ade80; border:1px solid rgba(34,197,94,0.35); white-space:nowrap;
+    }
     .cat-card .glow { position:absolute; width:160px; height:160px; border-radius:50%; filter:blur(70px); top:-60px; right:-50px; opacity:.5; transition:.4s; }
     .cat-card:hover .glow { opacity:.9; }
     .cg-a .glow { background:rgba(239,68,68,0.4); } .cg-b .glow { background:rgba(59,130,246,0.4); }
     .cg-c .glow { background:rgba(245,165,36,0.4); } .cg-d .glow { background:rgba(34,197,94,0.4); }
-    .cg-e .glow { background:rgba(168,85,247,0.4); }
+    .cg-e .glow { background:rgba(168,85,247,0.4); } .cg-ab .glow { background:rgba(96,165,250,0.4); }
+    .cg-bcde .glow { background:rgba(249,115,22,0.4); } .cg-abcde .glow { background:rgba(245,158,11,0.4); }
+    .cg-f .glow { background:rgba(52,211,153,0.4); }
 
     /* ============ QUIZ CTA ============ */
     .quiz-cta {
@@ -331,6 +375,8 @@
   <div class="nav-links" id="navLinks">
     <a href="#points">Permis à points</a>
     <a href="#infractions">Infractions</a>
+    <a href="#procedure">Procédure</a>
+    <a href="#couts">Coûts</a>
     <a href="#dossiers">Dossiers</a>
     <a href="#documents">Documents</a>
     <a href="#categories">Catégories</a>
@@ -435,6 +481,72 @@
   </div>
 </section>
 
+<!-- ================= PROCÉDURE ================= -->
+<section class="section" id="procedure" style="background:linear-gradient(180deg,transparent,rgba(16,22,39,0.5) 20%,rgba(16,22,39,0.5) 80%,transparent)">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="sec-tag">Guide officiel</span>
+      <h2>La procédure en 9 étapes</h2>
+      <p>De l'inscription en auto-école au retrait du titre au Centre de Gestion Intégré (CGI) : le parcours complet du candidat.</p>
+    </div>
+    <div class="steps">
+      <div class="step rv"><div class="n">1</div><div class="body"><h4><span class="ico">🏫</span> Choisir une auto-école agréée</h4><p>Sélectionnez une institution reconnue par l'État pour une formation conforme aux standards nationaux.</p></div></div>
+      <div class="step rv"><div class="n">2</div><div class="body"><h4><span class="ico">📄</span> Préparer les documents</h4><p>Pièce d'identité originale en cours de validité (CNI ou passeport) et attestation d'inscription délivrée par l'auto-école.</p></div></div>
+      <div class="step rv"><div class="n">3</div><div class="body"><h4><span class="ico">✍️</span> S'inscrire à l'auto-école</h4><p>L'auto-école enregistre votre dossier et délivre l'attestation d'inscription officielle.</p></div></div>
+      <div class="step rv"><div class="n">4</div><div class="body"><h4><span class="ico">📚</span> Suivre les cours théoriques <span class="pill code">Code</span></h4><p>Règles de circulation, signalisation routière et comportements sécuritaires sur la route.</p></div></div>
+      <div class="step rv"><div class="n">5</div><div class="body"><h4><span class="ico">🚙</span> Suivre les cours pratiques</h4><p>Manœuvres, conduite en ville et sur route avec un instructeur qualifié.</p></div></div>
+      <div class="step rv"><div class="n">6</div><div class="body"><h4><span class="ico">🩺</span> Visite médicale d'aptitude <span class="pill cond">Obligatoire</span></h4><p>Certificat médical d'aptitude physique et mentale, dans un centre de santé agréé ou au CGI.</p></div></div>
+      <div class="step rv"><div class="n">7</div><div class="body"><h4><span class="ico">🗂️</span> Enregistrement aux examens</h4><p>L'auto-école transmet votre dossier au Ministère des Transports ; une attestation d'enregistrement vous est délivrée.</p></div></div>
+      <div class="step rv"><div class="n">8</div><div class="body"><h4><span class="ico">📝</span> Réussir l'examen théorique + pratique <span class="pill exam">QCM ~1h</span></h4><p>Code : signalisation, priorités, sécurité (moyenne requise). Conduite : créneau, stationnement en épi, marche arrière, ville et autoroute (30 min à 1 h).</p></div></div>
+      <div class="step done rv"><div class="n">🏆</div><div class="body"><h4>Retirer le permis au CGI</h4><p>Enrôlement biométrique et édition du titre au Centre de Gestion Intégré, avec : pièce d'identité, certificats d'examen théorique et pratique, certificat médical et attestation d'enregistrement.</p></div></div>
+    </div>
+    <p class="rv" style="text-align:center;color:var(--muted);font-size:13px;margin-top:34px">Sources : Ministère des Transports · Quipux Afrique · Guide Koto CI</p>
+  </div>
+</section>
+
+<!-- ================= COÛTS ================= -->
+<section class="section" id="couts">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <span class="sec-tag">Tarifs officiels</span>
+      <h2>Coûts &amp; frais</h2>
+      <p>Les frais d'examen, d'enregistrement et d'édition du titre, par catégorie de permis (F CFA).</p>
+    </div>
+    <div class="inf-table-wrap rv" style="margin-bottom:26px">
+      <div class="inf-scroll">
+        <table class="inf">
+          <thead><tr><th>Opération</th><th>Catégorie / détail</th><th>Frais</th></tr></thead>
+          <tbody>
+            <tr><td>Examen théorique (code)</td><td>Toutes catégories</td><td class="amende">3 500 F</td></tr>
+            <tr><td>Examen pratique</td><td>Inclus dans les frais de l'auto-école</td><td class="amende">—</td></tr>
+            <tr><td>Enregistrement</td><td>A1 · A2 · A3 (moto / tricycle)</td><td class="amende">11 000 F</td></tr>
+            <tr><td>Enregistrement</td><td>B (véhicule de tourisme)</td><td class="amende">15 000 F</td></tr>
+            <tr><td>Enregistrement</td><td>CE · DE (marchandises / voyageurs)</td><td class="amende">21 000 F</td></tr>
+            <tr><td>Édition du permis</td><td>Toutes catégories</td><td class="amende">7 500 F</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="inf-table-wrap rv">
+      <div class="inf-scroll">
+        <table class="inf">
+          <thead><tr><th>Autres services</th><th>Frais</th></tr></thead>
+          <tbody>
+            <tr><td>Duplicata (perte / détérioration)</td><td class="amende">10 000 F</td></tr>
+            <tr><td>Permis de conduire international</td><td class="amende">15 000 F</td></tr>
+            <tr><td>Modification du permis</td><td class="amende">10 000 F</td></tr>
+            <tr><td>Renouvellement de validité (examen + édition)</td><td class="amende">3 500 F + 10 000 F</td></tr>
+            <tr><td>Changement au format carte de crédit (avant 2014)</td><td class="amende">10 000 F</td></tr>
+            <tr><td>Intégration du format 3 volets (examen + coût)</td><td class="amende">3 500 F + 10 000 F</td></tr>
+            <tr><td>Échange permis étranger (examen + édition)</td><td class="amende">3 500 F + 85 000 F</td></tr>
+            <tr><td>Conversion brevet militaire (examen + édition)</td><td class="amende">3 500 F + 20 000 F</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ================= DOSSIERS ================= -->
 <section class="section" id="dossiers" style="background:linear-gradient(180deg,transparent,rgba(16,22,39,0.5) 20%,rgba(16,22,39,0.5) 80%,transparent)">
   <div class="wrap">
@@ -447,6 +559,7 @@
       <div class="tab active" data-tab="t1"><span class="ico">🆕</span> Nouveau permis</div>
       <div class="tab" data-tab="t2"><span class="ico">📋</span> Duplicata</div>
       <div class="tab" data-tab="t3"><span class="ico">🔄</span> Échange permis étranger</div>
+      <div class="tab" data-tab="t4"><span class="ico">🌍</span> Permis international</div>
     </div>
 
     <div class="tab-panel show" id="t1">
@@ -514,6 +627,27 @@
         </ul>
       </div>
     </div>
+
+    <div class="tab-panel" id="t4">
+      <div class="doc-card rv">
+        <small>Permis international</small>
+        <h3><span class="num">🌍</span> Conduire à l'étranger</h3>
+        <ul class="checklist">
+          <li><span class="tick">✓</span><span><b>Photocopie du document d'identification</b> en cours de validité (CNI ou passeport)</span></li>
+          <li><span class="tick">✓</span><span><b>Photocopie du permis de conduire national</b> — présentation de l'original pour vérification</span></li>
+        </ul>
+      </div>
+      <div class="doc-card rv">
+        <small>Bon à savoir</small>
+        <h3><span class="num">ℹ️</span> Conditions &amp; validité</h3>
+        <ul class="checklist">
+          <li><span class="tick">✓</span><span>Être titulaire d'un <b>permis national valide</b> + pièce d'identité en cours de validité</span></li>
+          <li><span class="tick">✓</span><span>Frais : <b>15 000 F CFA</b></span></li>
+          <li><span class="tick">✓</span><span>Validité : <b>3 ans</b> — il complète le permis national (à garder sur soi)</span></li>
+        </ul>
+        <div class="doc-note">⚠️ Après un séjour de plus de 6 mois à l'étranger, le permis international doit être converti en permis local.</div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -547,8 +681,16 @@
         <div class="body"><h4>Empreintes digitales</h4><p>Prise des digitaux obligatoire lors de l'enrôlement du candidat.</p></div>
       </div>
       <div class="doc-id rv">
-        <div class="thumb"><img src="/img/cacr.jpg" alt="Certificat d'aptitude à la conduite routière"></div>
-        <div class="body"><h4>CACR</h4><p>Certificat d'Aptitude à la Conduite Routière — délivré après formation dans une auto-école agréée.</p></div>
+        <div class="thumb"><img src="/img/cacr.jpg" alt="Certificat d'aptitude du conducteur routier"></div>
+        <div class="body"><h4>CACR <span style="font-size:10px;color:var(--green);border:1px solid rgba(34,197,94,.4);padding:2px 8px;border-radius:100px;">PRO</span></h4><p>Certificat d'Aptitude du Conducteur Routier — obligatoire pour faire de la conduite sa profession. Exige un permis B, C, D ou E valide + formation en centre agréé.</p></div>
+      </div>
+      <div class="doc-id rv">
+        <div class="thumb"><div class="big-ico">📱</div></div>
+        <div class="body"><h4>Permis digital — CGI Digital</h4><p>Le permis de conduire digital complète le permis physique : accès sécurisé et permanent depuis un smartphone via l'application CGI Digital (Arrêté n°0015 du 28 mars 2019).</p></div>
+      </div>
+      <div class="doc-id rv">
+        <div class="thumb"><div class="big-ico">🚗</div></div>
+        <div class="body"><h4>Carte grise</h4><p>Certificat d'immatriculation obligatoire : tout véhicule de PTAC supérieur à 750 kg doit être immatriculé avant sa mise en circulation.</p></div>
       </div>
       <div class="doc-id rv">
         <div class="thumb"><img src="/img/ct.jpg" alt="Contrôle technique du véhicule"></div>
@@ -571,11 +713,15 @@
       <p>Du deux-roues aux ensembles de véhicules, choisissez la catégorie adaptée à votre projet.</p>
     </div>
     <div class="cats">
-      <div class="cat-card cg-a rv"><div class="glow"></div><div class="letter">A</div><h4>Motocycles</h4><p>Motocycles avec ou sans side-car, cylindrée supérieure à 50 cm³.</p></div>
-      <div class="cat-card cg-b rv"><div class="glow"></div><div class="letter">B</div><h4>Véhicules légers</h4><p>PTAC ≤ 3,5 tonnes, transportant jusqu'à 8 personnes outre le conducteur.</p></div>
-      <div class="cat-card cg-c rv"><div class="glow"></div><div class="letter">C</div><h4>Poids lourds</h4><p>Véhicules de transport de marchandises de PTAC supérieur à 3,5 tonnes.</p></div>
-      <div class="cat-card cg-d rv"><div class="glow"></div><div class="letter">D</div><h4>Transport de voyageurs</h4><p>Véhicules affectés au transport de plus de 8 places outre le conducteur.</p></div>
-      <div class="cat-card cg-e rv"><div class="glow"></div><div class="letter">E</div><h4>Ensembles de véhicules</h4><p>Voie publique : remorques et semi-remorques articulées au véhicule tracteur.</p></div>
+      <div class="cat-card cg-a rv"><div class="glow"></div><div class="letter">A</div><h4>Motocycles <span class="age">16 ans+</span></h4><p>Motos avec ou sans side-car et véhicules à trois roues (tricycles).</p></div>
+      <div class="cat-card cg-b rv"><div class="glow"></div><div class="letter">B</div><h4>Véhicules légers <span class="age">18 ans+</span></h4><p>Maximum 9 places assises, ≤ 3 500 kg. Remorque ≤ 750 kg autorisée.</p></div>
+      <div class="cat-card cg-c rv"><div class="glow"></div><div class="letter">C</div><h4>Poids lourds</h4><p>Camions de transport de marchandises &gt; 3,5 t + tracteurs routiers. Remorque légère ≤ 750 kg.</p></div>
+      <div class="cat-card cg-d rv"><div class="glow"></div><div class="letter">D</div><h4>Transport de voyageurs</h4><p>Autobus de plus de 8 personnes. Remorque légère ≤ 750 kg autorisée.</p></div>
+      <div class="cat-card cg-e rv"><div class="glow"></div><div class="letter">E</div><h4>Ensembles routiers</h4><p>Camion + semi-remorque ou remorque lourde &gt; 750 kg. Accessible après B, C ou D.</p></div>
+      <div class="cat-card cg-ab rv"><div class="glow"></div><div class="letter">AB</div><h4>Voitures + motos</h4><p>Extension du permis B incluant la conduite des motos. Masse max 3 500 kg.</p></div>
+      <div class="cat-card cg-bcde rv"><div class="glow"></div><div class="letter">BCDE</div><h4>Professionnel <span class="age">21 ans+</span></h4><p>Camionnettes et engins lourds — pour faire de la conduite son activité principale.</p></div>
+      <div class="cat-card cg-abcde rv"><div class="glow"></div><div class="letter">ABCDE</div><h4>Toutes catégories <span class="age">21 ans+</span></h4><p>Le permis le plus complet : n'importe quel type de véhicule en Côte d'Ivoire.</p></div>
+      <div class="cat-card cg-f rv"><div class="glow"></div><div class="letter">F</div><h4>Personnes handicapées</h4><p>Motos (A1, A2, A3) ou voitures (B) spécialement adaptées au handicap.</p></div>
     </div>
 
     <div class="quiz-cta rv" style="margin-top:70px">
@@ -598,6 +744,11 @@
   <img src="/img/logo.png" alt="SIGEXPC">
   <div class="fname">SIGEXPC</div>
   <p>Système de Gestion des Examens du Permis de Conduire — République de Côte d'Ivoire</p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:18px">
+    <span style="background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:8px 18px;font-size:13px">☎️ Centre d'appels : <b style="color:var(--yellow)">1302</b> (gratuit)</span>
+    <span style="background:var(--surface);border:1px solid var(--border);border-radius:100px;padding:8px 18px;font-size:13px">🚨 Urgences : <b style="color:var(--yellow)">170 · 180 · 185</b></span>
+  </div>
+  <p style="margin-top:16px">Sources : Ministère des Transports · Quipux Afrique · Koto CI</p>
   <p style="margin-top:2px">© 2026 SIGEXPC. Tous droits réservés.</p>
 </footer>
 
@@ -1013,7 +1164,7 @@ document.addEventListener('visibilitychange', () => {
       }
     });
   }, { rootMargin: '-40% 0px -55% 0px' });
-  ['points', 'infractions', 'dossiers', 'documents', 'categories'].forEach(id => {
+  ['points', 'infractions', 'procedure', 'couts', 'dossiers', 'documents', 'categories'].forEach(id => {
     const el = document.getElementById(id); if (el) sio.observe(el);
   });
 })();
