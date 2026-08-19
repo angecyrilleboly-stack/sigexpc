@@ -756,12 +756,15 @@ async function openSecurite() {
       </div></div>
       <div class="card"><div class="card-body">
         <h4 style="margin-top:0;"><i class="fas fa-user-plus" style="color:var(--blue)"></i> Créer un accès collaborateur</h4>
-        <div class="form-group"><label>Nom</label><input id="staffNom"></div>
-        <div class="form-group"><label>Email</label><input id="staffEmail" type="email"></div>
+        <div class="form-group"><label>Nom du collaborateur</label><input id="staffNom" placeholder="Ex: KONE Fatoumata"></div>
+        <div class="form-group"><label>Mot de passe</label><input id="staffPass" type="text" placeholder="Min. 6 caractères"></div>
         <div class="form-group"><label>Rôle</label><select id="staffRole">
           <option value="SECRETAIRE">Secrétaire (saisie uniquement)</option>
           <option value="GERANT">Gérant (accès total)</option>
         </select></div>
+        <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.3);border-radius:12px;padding:12px 15px;font-size:0.8rem;color:#7fa8d9;line-height:1.6;margin-bottom:14px;">
+          <i class="fas fa-circle-info"></i> Le collaborateur se connectera avec <b>l'email de l'auto-école</b> et le <b>mot de passe</b> que vous définissez ici. Ses accès dépendront du rôle choisi.
+        </div>
         <button class="btn btn-primary btn-block" onclick="createStaff()"><i class="fas fa-plus"></i> Créer l'accès</button>
       </div></div>
     </div>
@@ -779,13 +782,13 @@ async function loadStaff() {
   const el = document.getElementById('staffList');
   if (!el) return;
   el.innerHTML = `<table>
-    <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Action</th></tr></thead>
+    <thead><tr><th>Collaborateur</th><th>Rôle</th><th>Connexion</th><th>Action</th></tr></thead>
     <tbody>
     ${list.length === 0 ? `<tr><td colspan="4"><div class="empty-state"><i class="fas fa-users"></i><p>Aucun collaborateur.</p></div></td></tr>` :
       list.map(s => `<tr>
         <td><b>${esc(s.nom)}</b></td>
-        <td>${esc(s.email || '—')}</td>
         <td>${s.role === 'GERANT' ? '<span class="badge badge-info"><i class="fas fa-user-tie"></i> Gérant</span>' : '<span class="badge badge-gray"><i class="fas fa-keyboard"></i> Secrétaire</span>'}</td>
+        <td><small style="color:var(--gray);">📧 Email de l'auto-école<br>🔑 Mot de passe personnel</small></td>
         <td><button class="act-btn delete" onclick="deleteStaff('${s.id}','${esc(s.nom)}')"><i class="fas fa-trash"></i></button></td>
       </tr>`).join('')}
     </tbody>
@@ -810,14 +813,19 @@ async function changePassword() {
 
 async function createStaff() {
   const nom = document.getElementById('staffNom').value.trim();
-  const email = document.getElementById('staffEmail').value.trim();
+  const motDePasse = document.getElementById('staffPass').value;
   const subRole = document.getElementById('staffRole').value;
-  if (!nom || !email) return toast('Nom et email obligatoires.', 'error');
-  const res = await API.createStaff({ nom, email, subRole });
+  if (!nom) return toast('Le nom est obligatoire.', 'error');
+  if (!motDePasse || motDePasse.length < 6) return toast('Le mot de passe doit contenir au moins 6 caractères.', 'error');
+  const res = await API.createStaff({ nom, motDePasse, subRole });
   if (res.success) {
-    alertModal('Accès créé', `Transmettez ce mot de passe au collaborateur :<br><br><b style="font-size:1.6rem;color:var(--danger);font-family:monospace;">${res.code}</b>`, 'fa-key', 'success');
+    alertModal('Accès créé pour ' + esc(nom),
+      `Le collaborateur se connectera avec :<br><br>
+       📧 <b>L'email de l'auto-école</b><br>
+       🔑 Mot de passe : <b style="font-size:1.4rem;color:var(--danger);font-family:monospace;">${esc(motDePasse)}</b><br><br>
+       <small style="color:var(--gray);">Ses accès : ${subRole === 'GERANT' ? 'accès total (gérant)' : 'saisie uniquement (secrétaire)'}</small>`, 'fa-key', 'success');
     document.getElementById('staffNom').value = '';
-    document.getElementById('staffEmail').value = '';
+    document.getElementById('staffPass').value = '';
     loadStaff();
   } else toast(res.msg || 'Erreur.', 'error');
 }

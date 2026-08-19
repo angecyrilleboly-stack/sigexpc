@@ -261,23 +261,29 @@ router.delete('/centres/:id', requireAuth, requireRole('REGION'), async (req, re
 // ============================================================================
 router.get('/staff', requireAuth, requireRole('AUTO_ECOLE'), async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT id, id_ae, nom, email, role FROM auto_ecoles_staff WHERE id_ae = ?', [req.session.user.id]);
+    const [rows] = await pool.query('SELECT id, id_ae, nom, role FROM auto_ecoles_staff WHERE id_ae = ?', [req.session.user.id]);
     res.json({ success: true, list: rows });
   } catch (e) { res.status(500).json({ success: false, msg: e.message }); }
 });
 
 router.post('/staff', requireAuth, requireRole('AUTO_ECOLE'), async (req, res) => {
   try {
-    const { nom, email, subRole } = req.body;
+    const { nom, motDePasse, subRole } = req.body;
+    if (!nom || !String(nom).trim()) return res.status(400).json({ success: false, msg: 'Le nom est obligatoire.' });
+    if (!motDePasse || String(motDePasse).length < 6) {
+      return res.status(400).json({ success: false, msg: 'Le mot de passe doit contenir au moins 6 caractères.' });
+    }
     const idAE = req.session.user.id;
     const id = randId('STF', 5);
-    const code = randCode('PASS', 6);
+    // Pas d'email : le collaborateur se connecte avec l'email de l'auto-école
+    // + le mot de passe DEFINI PAR l'auto-école. Ses accès dépendent de son rôle.
+    const hash = await bcrypt.hash(String(motDePasse), 10);
     await pool.query(
       `INSERT INTO auto_ecoles_staff (id, id_ae, nom, email, code, role, statut, date)
-       VALUES (?, ?, ?, ?, ?, ?, 'actif', datetime('now','localtime'))`, [id, idAE, nom, email, code, subRole || 'SECRETAIRE']
+       VALUES (?, ?, ?, NULL, ?, ?, 'actif', datetime('now','localtime'))`, [id, idAE, String(nom).trim(), hash, subRole || 'SECRETAIRE']
     );
-    const [rows] = await pool.query('SELECT id, id_ae, nom, email, role FROM auto_ecoles_staff WHERE id_ae = ?', [idAE]);
-    res.json({ success: true, code, list: rows });
+    const [rows] = await pool.query('SELECT id, id_ae, nom, role FROM auto_ecoles_staff WHERE id_ae = ?', [idAE]);
+    res.json({ success: true, list: rows });
   } catch (e) { res.status(500).json({ success: false, msg: e.message }); }
 });
 
@@ -285,7 +291,7 @@ router.delete('/staff/:id', requireAuth, requireRole('AUTO_ECOLE'), async (req, 
   try {
     const idAE = req.session.user.id;
     await pool.query('DELETE FROM auto_ecoles_staff WHERE id = ? AND id_ae = ?', [req.params.id, idAE]);
-    const [rows] = await pool.query('SELECT id, id_ae, nom, email, role FROM auto_ecoles_staff WHERE id_ae = ?', [idAE]);
+    const [rows] = await pool.query('SELECT id, id_ae, nom, role FROM auto_ecoles_staff WHERE id_ae = ?', [idAE]);
     res.json({ success: true, list: rows });
   } catch (e) { res.status(500).json({ success: false, msg: e.message }); }
 });

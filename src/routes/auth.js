@@ -59,44 +59,50 @@ router.post('/login', async (req, res) => {
       `SELECT * FROM ${cfg.table} WHERE LOWER(${cfg.emailCol}) = ? LIMIT 1`,
       [String(email).trim().toLowerCase()]
     );
-    let row = rows[0];
-
-    // AUTO_ECOLE : chercher aussi dans le staff
-    if (role === 'AUTO_ECOLE' && !row) {
-      const [staffRows] = await pool.query(
-        `SELECT s.*, ae.id_region, ae.statut AS ae_statut FROM auto_ecoles_staff s
-         JOIN auto_ecoles ae ON s.id_ae = ae.id
-         WHERE LOWER(s.email) = ? LIMIT 1`,
-        [String(email).trim().toLowerCase()]
-      );
-      if (staffRows[0]) {
-        const s = staffRows[0];
-        if (!(await checkPass(motDePasse, s.code))) {
-          return res.json({ success: false, msg: 'Identifiants incorrects.' });
-        }
-        // AE bloquée : statut !== 'actif' (bloquée par admin OU abonnement expiré automatiquement)
-        // Réactivation possible uniquement par : super admin OU paiement GeniusPay
-        if (s.ae_statut !== 'actif') {
-          try {
-            const [p] = await pool.query('SELECT montant FROM parametres_abonnement ORDER BY id DESC LIMIT 1');
-            const montant = Number(p[0]?.montant) || 200;
-            return res.json({ success: false, isBlocked: true, aeName: s.nom, aeId: s.id_ae, montant });
-          } catch (e) {
-            return res.json({ success: false, isBlocked: true, aeName: s.nom, aeId: s.id_ae, montant: 200 });
-          }
-        }
-        const user = {
-          id: s.id_ae, staffId: s.id, nom: s.nom,
-          role: 'AUTO_ECOLE', idRegion: s.id_region || '',
-          isMain: false, subRole: s.role
-        };
-        req.session.user = user;
-        return res.json({ success: true, user });
-      }
-    }
+    const row = rows[0];
 
     if (!row) return res.json({ success: false, msg: 'Identifiants incorrects.' });
+
+    // AUTO_ECOLE : si le mot de passe principal ne correspond pas,
+    // essayer les mots de passe des collaborateurs (connexion avec l'email de l'AE).
+    // Chaque collaborateur se connecte avec l'email de l'auto-école + SON mot de passe.
     if (!(await checkPass(motDePasse, row[cfg.passCol]))) {
+      if (role === 'AUTO_ECOLE') {
+        const [staffRows] = await pool.query(
+          `SELECT * FROM auto_ecoles_staff WHERE id_ae = ? AND LOWER(statut) = 'actif'`,
+          [row.id]
+        );
+        for (const s of staffRows) {
+          if (await checkPass(motDePasse, s.code)) {
+            // AE bloquée : statut !== 'actif' (bloquée par admin OU abonnement expiré)
+            // Réactivation possible uniquement par : super admin OU paiement GeniusPay
+            if (row.statut !== 'actif') {
+              try {
+                const [p] = await pool.query('SELECT montant FROM parametres_abonnement ORDER BY id DESC LIMIT 1');
+                const montant = Number(p[0]?.montant) || 200;
+                return res.json({ success: false, isBlocked: true, aeName: row.nom, aeId: row.id, montant });
+              } catch (e) {
+                return res.json({ success: false, isBlocked: true, aeName: row.nom, aeId: row.id, montant: 200 });
+              }
+            }
+            const user = {
+              id: row.id, staffId: s.id, nom: s.nom,
+              role: 'AUTO_ECOLE', idRegion: row.id_region || '',
+              isMain: false, subRole: s.role
+            };
+            req.session.user = user;
+            return req.session.save
+              ? req.session.save((err) => {
+                  if (err) {
+                    console.error('Erreur save session:', err);
+                    return res.status(500).json({ success: false, error: 'Erreur de session: ' + err.message });
+                  }
+                  res.json({ success: true, user });
+                })
+              : res.json({ success: true, user });
+          }
+        }
+      }
       return res.json({ success: false, msg: 'Identifiants incorrects.' });
     }
 
