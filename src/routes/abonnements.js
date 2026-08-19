@@ -144,7 +144,17 @@ router.post('/:idAE/toggle', requireAuth, requireRole('SUPER_ADMIN'), async (req
 // ============================================================================
 // MON ABONNEMENT (AUTO_ECOLE)
 // ============================================================================
-router.get('/mon-abonnement', requireAuth, requireRole('AUTO_ECOLE'), async (req, res) => {
+// "Mon abonnement" : réservé au compte principal de l'auto-école
+function requireMainAE(req, res, next) {
+  const u = req.session && req.session.user;
+  if (!u) return res.status(401).json({ success: false, msg: 'Non connecté.' });
+  if (u.role !== 'AUTO_ECOLE' || !u.isMain) {
+    return res.status(403).json({ success: false, msg: 'Accès refusé : réservé au compte principal de l\'auto-école.' });
+  }
+  next();
+}
+
+router.get('/mon-abonnement', requireAuth, requireRole('AUTO_ECOLE'), requireMainAE, async (req, res) => {
   try {
     const idAE = req.session.user.id;
     const [aes] = await pool.query('SELECT * FROM auto_ecoles WHERE id = ?', [idAE]);

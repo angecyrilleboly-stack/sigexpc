@@ -221,9 +221,10 @@ function buildMenu() {
         html += navItem('analyse', 'fa-chart-pie', 'Analyse (TCD)');
         html += navItem('rapports', 'fa-file-pdf', 'Rapports officiels');
         html += navItem('deliberes-ae', 'fa-check-double', 'Bordereaux délibérés');
-        html += sectionTitle('Mon compte');
-        html += navItem('mon-abonnement', 'fa-receipt', 'Mon abonnement');
-        if (USER.isMain || USER.subRole === 'GERANT') {
+        // "Mon abonnement" et "Sécurité & Accès" : réservés au compte principal uniquement
+        if (USER.isMain) {
+          html += sectionTitle('Mon compte');
+          html += navItem('mon-abonnement', 'fa-receipt', 'Mon abonnement');
           html += navItem('securite', 'fa-lock', 'Sécurité & Accès');
         }
       }

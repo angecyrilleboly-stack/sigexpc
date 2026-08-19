@@ -266,13 +266,14 @@ router.get('/staff', requireAuth, requireRole('AUTO_ECOLE'), async (req, res) =>
   } catch (e) { res.status(500).json({ success: false, msg: e.message }); }
 });
 
-// Gestion des accès collaborateurs : réservée au gérant principal (isMain)
-// ou à un collaborateur avec le rôle GERANT. Un SECRETAIRE n'y a pas accès.
+// Gestion des accès collaborateurs : réservée UNIQUEMENT au compte
+// principal de l'auto-école (isMain). Ni un collaborateur GERANT, ni un
+// SECRETAIRE ne peuvent créer ou supprimer des accès.
 function requireGerant(req, res, next) {
   const u = req.session && req.session.user;
   if (!u) return res.status(401).json({ success: false, msg: 'Non connecté.' });
-  if (!(u.isMain || u.subRole === 'GERANT')) {
-    return res.status(403).json({ success: false, msg: 'Accès refusé : réservé au gérant.' });
+  if (!u.isMain) {
+    return res.status(403).json({ success: false, msg: 'Accès refusé : réservé au compte principal de l\'auto-école.' });
   }
   next();
 }
