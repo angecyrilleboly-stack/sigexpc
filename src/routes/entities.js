@@ -266,7 +266,18 @@ router.get('/staff', requireAuth, requireRole('AUTO_ECOLE'), async (req, res) =>
   } catch (e) { res.status(500).json({ success: false, msg: e.message }); }
 });
 
-router.post('/staff', requireAuth, requireRole('AUTO_ECOLE'), async (req, res) => {
+// Gestion des accès collaborateurs : réservée au gérant principal (isMain)
+// ou à un collaborateur avec le rôle GERANT. Un SECRETAIRE n'y a pas accès.
+function requireGerant(req, res, next) {
+  const u = req.session && req.session.user;
+  if (!u) return res.status(401).json({ success: false, msg: 'Non connecté.' });
+  if (!(u.isMain || u.subRole === 'GERANT')) {
+    return res.status(403).json({ success: false, msg: 'Accès refusé : réservé au gérant.' });
+  }
+  next();
+}
+
+router.post('/staff', requireAuth, requireRole('AUTO_ECOLE'), requireGerant, async (req, res) => {
   try {
     const { nom, motDePasse, subRole } = req.body;
     if (!nom || !String(nom).trim()) return res.status(400).json({ success: false, msg: 'Le nom est obligatoire.' });
@@ -287,7 +298,7 @@ router.post('/staff', requireAuth, requireRole('AUTO_ECOLE'), async (req, res) =
   } catch (e) { res.status(500).json({ success: false, msg: e.message }); }
 });
 
-router.delete('/staff/:id', requireAuth, requireRole('AUTO_ECOLE'), async (req, res) => {
+router.delete('/staff/:id', requireAuth, requireRole('AUTO_ECOLE'), requireGerant, async (req, res) => {
   try {
     const idAE = req.session.user.id;
     await pool.query('DELETE FROM auto_ecoles_staff WHERE id = ? AND id_ae = ?', [req.params.id, idAE]);

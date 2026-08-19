@@ -209,16 +209,23 @@ function buildMenu() {
       html += navItem('responsables', 'fa-user-tie', 'Signataires');
       html += navItem('config', 'fa-gear', 'Configuration');
     } else if (r === 'AUTO_ECOLE') {
-      html += sectionTitle('Gestion');
-      html += navItem('candidats', 'fa-users', 'Candidats');
-      html += navItem('inscriptions', 'fa-clipboard-check', 'Inscriptions bordereau');
-      html += navItem('analyse', 'fa-chart-pie', 'Analyse (TCD)');
-      html += navItem('rapports', 'fa-file-pdf', 'Rapports officiels');
-      html += navItem('deliberes-ae', 'fa-check-double', 'Bordereaux délibérés');
-      html += sectionTitle('Mon compte');
-      html += navItem('mon-abonnement', 'fa-receipt', 'Mon abonnement');
-      if (USER.isMain || USER.subRole === 'GERANT') {
-        html += navItem('securite', 'fa-lock', 'Sécurité & Accès');
+      if (!USER.isMain && USER.subRole === 'SECRETAIRE') {
+        // SECRÉTAIRE : accès limité aux candidats et aux inscriptions bordereau
+        html += sectionTitle('Gestion');
+        html += navItem('candidats', 'fa-users', 'Candidats', true);
+        html += navItem('inscriptions', 'fa-clipboard-check', 'Inscriptions bordereau');
+      } else {
+        html += sectionTitle('Gestion');
+        html += navItem('candidats', 'fa-users', 'Candidats');
+        html += navItem('inscriptions', 'fa-clipboard-check', 'Inscriptions bordereau');
+        html += navItem('analyse', 'fa-chart-pie', 'Analyse (TCD)');
+        html += navItem('rapports', 'fa-file-pdf', 'Rapports officiels');
+        html += navItem('deliberes-ae', 'fa-check-double', 'Bordereaux délibérés');
+        html += sectionTitle('Mon compte');
+        html += navItem('mon-abonnement', 'fa-receipt', 'Mon abonnement');
+        if (USER.isMain || USER.subRole === 'GERANT') {
+          html += navItem('securite', 'fa-lock', 'Sécurité & Accès');
+        }
       }
     } else if (r === 'AGENT') {
       html += sectionTitle('Remise de permis');
