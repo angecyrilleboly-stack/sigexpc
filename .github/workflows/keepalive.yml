@@ -1,0 +1,26 @@
+name: Keep Render awake
+
+# Empêche le service Render (plan gratuit) de s'endormir pendant les heures
+# d'utilisation. Render endort le service après 15 min sans trafic entrant,
+# ce qui affiche une page de chargement ~50s à chaque nouvelle visite.
+# Ce ping toutes les 10 minutes (6h - 23h59, heure d'Abidjan UTC+0) garde
+# le site instantanément disponible.
+
+on:
+  schedule:
+    - cron: '*/10 6-23 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping SIGEXPC
+        run: |
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 https://sigexpc.onrender.com/ || echo "ERR")
+          echo "Ping SIGEXPC -> HTTP $CODE ($(date -u '+%Y-%m-%d %H:%M UTC'))"
+          if [ "$CODE" = "200" ]; then
+            echo "Site réveillé avec succès."
+          else
+            echo "Attention : réponse HTTP $CODE"
+          fi
