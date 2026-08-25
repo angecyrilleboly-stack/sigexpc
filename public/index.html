@@ -14,6 +14,21 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @keyframes slide-up {
+      from {
+        opacity: 0;
+        transform: translateY(100%);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .animate-slide-up {
+      animation: slide-up 0.3s ease-out forwards;
+    }
+  </style>
 </head>
 <body>
 
@@ -28,6 +43,23 @@
 
   <!-- ============================ TOASTS ============================ -->
   <div id="toastContainer"></div>
+
+  <!-- ============================ BANNIÈRE INSTALLATION PWA ============================ -->
+  <div id="installBanner" class="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 z-50 hidden flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-slide-up">
+    <div class="flex items-center gap-3">
+      <div class="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
+        <i class="fas fa-mobile-alt text-blue-600 dark:text-blue-400 text-xl"></i>
+      </div>
+      <div>
+        <p class="font-semibold text-gray-900 dark:text-white">Installer SIGEXPC</p>
+        <p class="text-sm text-gray-600 dark:text-gray-300">Accédez plus rapidement depuis votre écran d'accueil</p>
+      </div>
+    </div>
+    <div class="flex gap-2 w-full sm:w-auto">
+      <button id="dismissInstallBtn" class="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">Plus tard</button>
+      <button id="installBtn" class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"><i class="fas fa-download mr-1"></i> Installer</button>
+    </div>
+  </div>
 
   <!-- ============================ ÉCRAN DE CONNEXION (design original SIGEXPC) ============================ -->
   <div id="loginView" class="login-screen">

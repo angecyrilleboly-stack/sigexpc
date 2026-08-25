@@ -57,6 +57,39 @@ async function checkSession() {
   } catch (e) { /* pas connecté */ }
 }
 
+// ---------- Install Prompt PWA ----------
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  showInstallPrompt();
+});
+
+function showInstallPrompt() {
+  // Afficher une notification d'installation en bas de l'écran
+  const installBanner = document.getElementById('installBanner');
+  if (installBanner) {
+    installBanner.classList.remove('hidden');
+    installBanner.style.display = 'flex';
+  }
+}
+
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    toast('Application installée sur votre appareil !', 'success');
+    document.getElementById('installBanner').classList.add('hidden');
+  }
+  deferredPrompt = null;
+});
+
+document.getElementById('dismissInstallBtn').addEventListener('click', () => {
+  document.getElementById('installBanner').classList.add('hidden');
+});
+
 // ---------- Connexion ----------
 document.getElementById('btnLogin').addEventListener('click', handleLogin);
 document.getElementById('lPass').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
