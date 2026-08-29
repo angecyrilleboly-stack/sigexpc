@@ -6,7 +6,7 @@
   <title>SIGEXPC - Portail des Examens du Permis de Conduire</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚦</text></svg>">
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#1e3a8a">
+  <meta name="theme-color" content="#F4593F">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="SIGEXPC">
@@ -47,8 +47,8 @@
   <!-- ============================ BANNIÈRE INSTALLATION PWA ============================ -->
   <div id="installBanner" class="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 z-50 hidden flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-slide-up">
     <div class="flex items-center gap-3">
-      <div class="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg">
-        <i class="fas fa-mobile-alt text-blue-600 dark:text-blue-400 text-xl"></i>
+      <div class="p-2.5 rounded-xl" style="background:#FDEDE9;">
+        <i class="fas fa-mobile-alt text-xl" style="color:#F4593F;"></i>
       </div>
       <div>
         <p class="font-semibold text-gray-900 dark:text-white">Installer SIGEXPC</p>
@@ -61,7 +61,7 @@
     </div>
     <div class="flex gap-2 w-full sm:w-auto">
       <button id="dismissInstallBtn" class="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors">Plus tard</button>
-      <button id="installBtn" class="px-4 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"><i class="fas fa-download mr-1"></i> Installer</button>
+      <button id="installBtn" class="px-4 py-2 text-sm font-semibold text-white rounded-xl transition-colors" style="background:linear-gradient(135deg,#FF7A5C,#F4593F);box-shadow:0 6px 14px rgba(244,89,63,0.35);"><i class="fas fa-download mr-1"></i> Installer</button>
     </div>
   </div>
 
@@ -72,7 +72,7 @@
     <img src="/img/logo.png" alt="SIGEXPC Logo" style="width: 250px; height: auto; margin-bottom: 15px; border-radius: 15px; box-shadow: 0 10px 15px rgba(0,0,0,0.1);">
 
   <div id="roleContainer">
-    <select id="lRole" style="border: 2px solid var(--blue); font-weight: bold; color: var(--blue); background: rgba(59, 130, 246, 0.05);">
+    <select id="lRole" style="border: 2px solid var(--blue); font-weight: bold; color: var(--blue); background: rgba(244,89,63, 0.05);">
       <option value="REGION">Direction Régionale</option>
       <option value="AUTO_ECOLE">Auto-École</option>
       <option value="AGENT">Agent Vérificateur</option>
@@ -104,14 +104,14 @@
       <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 25px; text-align: left;">
         <div style="margin-bottom: 12px;">
           <span style="display: block; color: #64748b; font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Auto-École</span>
-          <span id="payAEName" style="font-size: 1.4rem; font-weight: 700; color: #1e3a8a;">Chargement...</span>
+          <span id="payAEName" style="font-size: 1.4rem; font-weight: 700; color: #F4593F;">Chargement...</span>
         </div>
         <div>
           <span style="display: block; color: #64748b; font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Tarif Mensuel</span>
           <span id="payMontant" style="font-size: 2.5rem; font-weight: 900; color: #0f172a;">— FCFA</span>
         </div>
       </div>
-      <button class="btn-main" id="btnPayNow" onclick="redirectToGeniusPay()" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; border: none; padding: 18px; border-radius: 12px; font-weight: 700; font-size: 1.2rem; cursor: pointer; box-shadow: 0 8px 20px rgba(30, 58, 138, 0.4); transition: transform 0.2s;">
+      <button class="btn-main" id="btnPayNow" onclick="redirectToGeniusPay()" style="background: linear-gradient(135deg, #F4593F, #FF7A5C); color: white; border: none; padding: 18px; border-radius: 12px; font-weight: 700; font-size: 1.2rem; cursor: pointer; box-shadow: 0 8px 20px rgba(244,89,63, 0.4); transition: transform 0.2s;">
         <i class="fas fa-credit-card"></i> PAYER MAINTENANT
       </button>
       <button onclick="backToLogin()" style="background: #e2e8f0; color: #1e293b; border: 1px solid #cbd5e1; padding: 14px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 12px; font-family: inherit; font-size: 0.95rem;">
@@ -154,12 +154,12 @@
   </main>
 
   <!-- CSS + Scripts JS (avec cache-buster pour forcer le rechargement) -->
-  <link rel="stylesheet" href="/css/styles.css?v=20260829">
-  <script src="/js/api.js?v=20260829"></script>
-  <script src="/js/ui.js?v=20260829"></script>
-  <script src="/js/views.js?v=20260829"></script>
-  <script src="/js/views-candidats.js?v=20260829"></script>
-  <script src="/js/views-stats.js?v=20260829"></script>
-  <script src="/js/app.js?v=20260829"></script>
+  <link rel="stylesheet" href="/css/styles.css?v=20260830">
+  <script src="/js/api.js?v=20260830"></script>
+  <script src="/js/ui.js?v=20260830"></script>
+  <script src="/js/views.js?v=20260830"></script>
+  <script src="/js/views-candidats.js?v=20260830"></script>
+  <script src="/js/views-stats.js?v=20260830"></script>
+  <script src="/js/app.js?v=20260830"></script>
 </body>
 </html>

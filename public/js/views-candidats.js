@@ -246,7 +246,7 @@ async function openBordereaux() {
   content.innerHTML = `<div class="fade-in">
     ${setTitle("Bordereaux d'examen", `<button class="btn btn-sm btn-ghost" onclick="openBordereaux()"><i class="fas fa-sync"></i></button>`)}
     <div class="stats-grid" style="margin-bottom:20px;">
-      <div class="stat-card" style="cursor:default;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);">
+      <div class="stat-card" style="cursor:default;background:rgba(244,89,63,0.06);border:1px solid rgba(244,89,63,0.15);">
         <i class="fas fa-file-lines stat-icon-bg" style="color:var(--blue);opacity:0.1;"></i>
         <div class="stat-label">Total examens</div>
         <div class="stat-value" style="color:var(--blue);">${total}</div>
@@ -277,7 +277,7 @@ async function openBordereaux() {
             return `<tr style="transition:background 0.15s;" onmouseover="this.style.background='var(--table-hover)'" onmouseout="this.style.background=''">
               <td>
                 <div style="display:flex;align-items:center;gap:10px;">
-                  <div style="width:38px;height:38px;border-radius:10px;background:rgba(59,130,246,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                  <div style="width:38px;height:38px;border-radius:10px;background:rgba(244,89,63,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                     <i class="fas ${String(e.type_examen).includes('Code') ? 'fa-book' : 'fa-car'}" style="color:var(--blue);font-size:0.9rem;"></i>
                   </div>
                   <div>
@@ -660,7 +660,7 @@ function renderInscTable(list) {
     h += '<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--gray);">Vous n\'avez aucun candidat éligible pour ce type d\'examen.</td></tr>';
   } else {
     list.forEach(c => {
-      let stDisp = '<span class="badge" style="background:rgba(59,130,246,0.1);color:var(--blue);border:1px solid var(--blue);"><i class="fas fa-hourglass-start"></i> Prêt à soumettre</span>';
+      let stDisp = '<span class="badge" style="background:rgba(244,89,63,0.1);color:var(--blue);border:1px solid var(--blue);"><i class="fas fa-hourglass-start"></i> Prêt à soumettre</span>';
       if (c.stGlobal === 'Admis Dernier Code') stDisp = '<span class="badge" style="background:#dcfce7;color:#065f46;border:1px solid #10b981;"><i class="fas fa-check-circle"></i> Apte au dernier Code</span>';
       else if (String(c.stGlobal).includes('Ajourné')) stDisp = `<span class="badge" style="background:#fee2e2;color:#991b1b;border:1px solid #f87171;"><i class="fas fa-history"></i> ${esc(c.stGlobal)}</span>`;
 

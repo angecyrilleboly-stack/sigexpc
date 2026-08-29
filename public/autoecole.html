@@ -6,34 +6,34 @@
   <title>SIGEXPC - Espace Auto-Écoles</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚦</text></svg>">
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#1e3a8a">
+  <meta name="theme-color" content="#F4593F">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="SIGEXPC">
   <link rel="apple-touch-icon" href="/img/icon-192.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="/css/styles.css?v=20260829">
+  <link rel="stylesheet" href="/css/styles.css?v=20260830">
   <style>
     /* Toast simple pour cette page autonome */
     #toastContainer { position: fixed; top: 20px; right: 20px; z-index: 9999; }
-    .toast-item { background: #1e3a8a; color: #fff; padding: 14px 22px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); animation: slideIn 0.3s; max-width: 350px; font-size: 0.92rem; }
+    .toast-item { background: #F4593F; color: #fff; padding: 14px 22px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); animation: slideIn 0.3s; max-width: 350px; font-size: 0.92rem; }
     .toast-item.success { background: #16a34a; }
     .toast-item.error { background: #dc2626; }
-    .toast-item.info { background: #2563eb; }
+    .toast-item.info { background: #E8432E; }
     @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     /* Petit bandeau indicatif spécifique aux auto-écoles */
     .ae-banner {
-      background: rgba(30, 58, 138, 0.08);
-      border: 1px dashed #1e3a8a;
-      border-radius: 10px;
+      background: rgba(244,89,63, 0.08);
+      border: 1px solid rgba(244,89,63,0.3);
+      border-radius: 12px;
       padding: 10px 14px;
       margin-bottom: 8px;
       font-size: 0.82rem;
-      color: #1e3a8a;
+      color: #F4593F;
       text-align: center;
       line-height: 1.4;
     }
-    .ae-banner i { color: #1e3a8a; }
-    .ae-banner a { color: #1e3a8a; font-weight: 600; text-decoration: none; }
+    .ae-banner i { color: #F4593F; }
+    .ae-banner a { color: #F4593F; font-weight: 600; text-decoration: none; }
     .ae-banner a:hover { text-decoration: underline; }
   </style>
 </head>
@@ -75,14 +75,14 @@
       <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 25px; text-align: left;">
         <div style="margin-bottom: 12px;">
           <span style="display: block; color: #64748b; font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Auto-École</span>
-          <span id="payAEName" style="font-size: 1.4rem; font-weight: 700; color: #1e3a8a;">Chargement...</span>
+          <span id="payAEName" style="font-size: 1.4rem; font-weight: 700; color: #F4593F;">Chargement...</span>
         </div>
         <div>
           <span style="display: block; color: #64748b; font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Tarif Mensuel</span>
           <span id="payMontant" style="font-size: 2.5rem; font-weight: 900; color: #0f172a;">— FCFA</span>
         </div>
       </div>
-      <button class="btn-main" id="btnPayNow" onclick="redirectToGeniusPay()" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6); color: white; border: none; padding: 18px; border-radius: 12px; font-weight: 700; font-size: 1.2rem; cursor: pointer; box-shadow: 0 8px 20px rgba(30, 58, 138, 0.4); transition: transform 0.2s;">
+      <button class="btn-main" id="btnPayNow" onclick="redirectToGeniusPay()" style="background: linear-gradient(135deg, #F4593F, #FF7A5C); color: white; border: none; padding: 18px; border-radius: 12px; font-weight: 700; font-size: 1.2rem; cursor: pointer; box-shadow: 0 8px 20px rgba(244,89,63, 0.4); transition: transform 0.2s;">
         <i class="fas fa-credit-card"></i> PAYER MAINTENANT
       </button>
       <button onclick="backToLogin()" style="background: #e2e8f0; color: #1e293b; border: 1px solid #cbd5e1; padding: 14px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 12px; font-family: inherit; font-size: 0.95rem;">

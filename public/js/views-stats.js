@@ -79,7 +79,7 @@ async function openStatistiques() {
       data: {
         labels: ['Aptes (Code)', 'Aptes (Conduite)', 'Inaptes', 'Absents', 'Non évalués'],
         datasets: [{ data: [global.apte_code, global.apte_conduite, global.inapte, global.absent, global.non_evalue],
-          backgroundColor: ['#10b981', '#3b82f6', '#ef4444', '#f59e0b', '#a78bfa'], borderWidth: 2, borderColor: '#fff' }]
+          backgroundColor: ['#10b981', '#F4593F', '#ef4444', '#f59e0b', '#a78bfa'], borderWidth: 2, borderColor: '#fff' }]
       },
       options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
     }));
@@ -92,7 +92,7 @@ async function openStatistiques() {
         labels: aeStats.map(a => a.nom),
         datasets: [
           { label: 'Aptes (Code)', data: aeStats.map(a => a.apte_code), backgroundColor: '#10b981' },
-          { label: 'Aptes (Conduite)', data: aeStats.map(a => a.apte_conduite), backgroundColor: '#3b82f6' }
+          { label: 'Aptes (Conduite)', data: aeStats.map(a => a.apte_conduite), backgroundColor: '#F4593F' }
         ]
       },
       options: { responsive: true, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }, plugins: { legend: { position: 'bottom' } } }
@@ -186,7 +186,7 @@ function renderAnalyse() {
   // 4 cartes avec couleurs de fond claires (comme l'ancien)
   const cards = [
     ['APTE_CONDUITE', 'ADMIS (CONDUITE)', '#10b981', counts.apte_conduite],
-    ['APTE_CODE', 'ADMIS (CODE)', '#3b82f6', counts.apte_code],
+    ['APTE_CODE', 'ADMIS (CODE)', '#F4593F', counts.apte_code],
     ['INAPTE', 'INAPTES', '#ef4444', counts.inapte],
     ['ABSENT', 'ABSENTS', '#64748b', counts.absent]
   ];
@@ -222,8 +222,8 @@ function renderAnalyse() {
         datasets: [{
           label: 'Volume de Candidats',
           data: [counts.apte_conduite, counts.apte_code, counts.inapte, counts.absent, counts.ne],
-          backgroundColor: ['rgba(16,185,129,0.8)', 'rgba(59,130,246,0.8)', 'rgba(239,68,68,0.8)', 'rgba(100,116,139,0.8)', 'rgba(245,158,11,0.8)'],
-          borderColor: ['#10b981', '#3b82f6', '#ef4444', '#64748b', '#f59e0b'],
+          backgroundColor: ['rgba(16,185,129,0.8)', 'rgba(244,89,63,0.8)', 'rgba(239,68,68,0.8)', 'rgba(100,116,139,0.8)', 'rgba(245,158,11,0.8)'],
+          borderColor: ['#10b981', '#F4593F', '#ef4444', '#64748b', '#f59e0b'],
           borderWidth: 2,
           borderRadius: 8
         }]
@@ -762,7 +762,7 @@ async function openSecurite() {
           <option value="SECRETAIRE">Secrétaire (saisie uniquement)</option>
           <option value="GERANT">Gérant (accès total)</option>
         </select></div>
-        <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.3);border-radius:12px;padding:12px 15px;font-size:0.8rem;color:#7fa8d9;line-height:1.6;margin-bottom:14px;">
+        <div style="background:rgba(244,89,63,0.08);border:1px solid rgba(244,89,63,0.3);border-radius:12px;padding:12px 15px;font-size:0.8rem;color:#B35040;line-height:1.6;margin-bottom:14px;">
           <i class="fas fa-circle-info"></i> Le collaborateur se connectera avec <b>l'email de l'auto-école</b> et le <b>mot de passe</b> que vous définissez ici. Ses accès dépendront du rôle choisi.
         </div>
         <button class="btn btn-primary btn-block" onclick="createStaff()"><i class="fas fa-plus"></i> Créer l'accès</button>
