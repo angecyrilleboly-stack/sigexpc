@@ -57,37 +57,78 @@ async function checkSession() {
   } catch (e) { /* pas connecté */ }
 }
 
-// ---------- Install Prompt PWA ----------
+// ---------- Installation PWA (relance pour inciter à installer) ----------
 let deferredPrompt = null;
+const INSTALL_DISMISS_KEY = 'sigexpc-install-dismissed-at';
+
+function isStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches ||
+         window.navigator.standalone === true;
+}
+
+function isIOS() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+// "Plus tard" ne cache la bannière que 24h : on relance l'utilisateur
+// jusqu'à ce qu'il installe réellement l'application.
+function installRecentlyDismissed() {
+  const t = Number(localStorage.getItem(INSTALL_DISMISS_KEY) || 0);
+  return Date.now() - t < 24 * 60 * 60 * 1000;
+}
+
+function showInstallBanner() {
+  const banner = document.getElementById('installBanner');
+  if (!banner) return;
+  if (isStandalone() || installRecentlyDismissed()) return;
+  // iOS ne supporte pas le prompt natif : instructions manuelles à la place
+  if (isIOS()) {
+    const iosHint = document.getElementById('installIosHint');
+    if (iosHint) iosHint.style.display = 'block';
+    const btn = document.getElementById('installBtn');
+    if (btn) btn.style.display = 'none';
+  }
+  banner.classList.remove('hidden');
+  banner.style.display = 'flex';
+}
 
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  showInstallPrompt();
+  showInstallBanner();
 });
 
-function showInstallPrompt() {
-  // Afficher une notification d'installation en bas de l'écran
-  const installBanner = document.getElementById('installBanner');
-  if (installBanner) {
-    installBanner.classList.remove('hidden');
-    installBanner.style.display = 'flex';
-  }
-}
+// Certains navigateurs ne déclenchent jamais beforeinstallprompt :
+// afficher quand même la bannière après un court délai.
+setTimeout(showInstallBanner, 4000);
+
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  const banner = document.getElementById('installBanner');
+  if (banner) banner.style.display = 'none';
+  toast('SIGEXPC a été installé sur votre appareil !', 'success');
+});
 
 document.getElementById('installBtn').addEventListener('click', async () => {
-  if (!deferredPrompt) return;
+  if (!deferredPrompt) {
+    toast('Utilisez le menu de votre navigateur : « Installer l\'application » ou « Ajouter à l\'écran d\'accueil ».', 'info', 6000);
+    return;
+  }
   deferredPrompt.prompt();
   const { outcome } = await deferredPrompt.userChoice;
-  if (outcome === 'accepted') {
-    toast('Application installée sur votre appareil !', 'success');
-    document.getElementById('installBanner').classList.add('hidden');
-  }
   deferredPrompt = null;
+  if (outcome === 'accepted') {
+    document.getElementById('installBanner').style.display = 'none';
+  } else {
+    localStorage.setItem(INSTALL_DISMISS_KEY, String(Date.now()));
+    document.getElementById('installBanner').style.display = 'none';
+  }
 });
 
 document.getElementById('dismissInstallBtn').addEventListener('click', () => {
-  document.getElementById('installBanner').classList.add('hidden');
+  localStorage.setItem(INSTALL_DISMISS_KEY, String(Date.now()));
+  document.getElementById('installBanner').style.display = 'none';
 });
 
 // ---------- Connexion ----------
