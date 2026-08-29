@@ -1,26 +1,38 @@
 name: Keep Render awake
 
-# Empêche le service Render (plan gratuit) de s'endormir pendant les heures
-# d'utilisation. Render endort le service après 15 min sans trafic entrant,
-# ce qui affiche une page de chargement ~50s à chaque nouvelle visite.
-# Ce ping toutes les 10 minutes (6h - 23h59, heure d'Abidjan UTC+0) garde
-# le site instantanément disponible.
+# Empêche le service Render (plan gratuit) de s'endormir. Render endort le
+# service après 15 min sans trafic entrant, ce qui affiche une page de
+# chargement ~50s à chaque nouvelle visite.
+#
+# Le cron GitHub Actions peut être retardé de plusieurs minutes aux heures de
+# pointe : on utilise donc DEUX horaires décalés (toutes les 5 min + un second
+# décalé de 3 min) pour garantir un ping au moins toutes les ~7 min réelles,
+# 24h/24. Le repo étant public, les minutes GitHub Actions sont illimitées.
 
 on:
   schedule:
-    - cron: '*/10 6-23 * * *'
+    - cron: '*/5 * * * *'      # :00 :05 :10 :15 ...
+    - cron: '3-59/5 * * * *'   # :03 :08 :13 :18 ...
   workflow_dispatch:
+
+concurrency:
+  group: keepalive
+  cancel-in-progress: true
 
 jobs:
   ping:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: Ping SIGEXPC
+      - name: Ping SIGEXPC (avec relance si échec)
         run: |
-          CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 https://sigexpc.onrender.com/ || echo "ERR")
-          echo "Ping SIGEXPC -> HTTP $CODE ($(date -u '+%Y-%m-%d %H:%M UTC'))"
-          if [ "$CODE" = "200" ]; then
-            echo "Site réveillé avec succès."
-          else
-            echo "Attention : réponse HTTP $CODE"
-          fi
+          for i in 1 2 3; do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 100 https://sigexpc.onrender.com/ || echo "ERR")
+            echo "Tentative $i -> HTTP $CODE ($(date -u '+%Y-%m-%d %H:%M:%S UTC'))"
+            if [ "$CODE" = "200" ]; then
+              echo "Site réveillé avec succès."
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Attention : le site n'a pas répondu 200 après 3 tentatives."
