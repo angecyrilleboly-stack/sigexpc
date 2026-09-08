@@ -1,0 +1,34 @@
+name: Keep Render awake (renfort 2)
+
+# Renfort du keep-alive principal (.github/workflows/keepalive.yml).
+# Horaires décalés de 1 et 4 minutes par rapport au workflow principal,
+# pour compenser les retards du planificateur GitHub Actions aux heures
+# de pointe. Combiné, le site reçoit un ping toutes les 1 à 2 minutes.
+
+on:
+  schedule:
+    - cron: '1-59/5 * * * *'   # :01 :06 :11 :16 ...
+    - cron: '4-59/5 * * * *'   # :04 :09 :14 :19 ...
+  workflow_dispatch:
+
+concurrency:
+  group: keepalive-2
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping SIGEXPC (avec relance si échec)
+        run: |
+          for i in 1 2 3; do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 100 https://sigexpc.onrender.com/ || echo "ERR")
+            echo "Tentative $i -> HTTP $CODE ($(date -u '+%Y-%m-%d %H:%M:%S UTC'))"
+            if [ "$CODE" = "200" ]; then
+              echo "Site réveillé avec succès."
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Attention : le site n'a pas répondu 200 après 3 tentatives."
