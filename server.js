@@ -137,6 +137,16 @@ app.get('/autoecole', (req, res) => {
 });
 
 // ----------------------------------------------------------------------------
+// Pages de connexion dédiées par rôle (le rôle est forcé côté client d'après
+// l'URL, et validé côté API : impossible de se connecter avec un autre rôle)
+//   /drtp -> Direction Régionale | /av -> Agent Vérificateur
+//   /sttc -> Service STTC        | /boly -> Super Admin
+// ----------------------------------------------------------------------------
+app.get(['/drtp', '/av', '/sttc', '/boly'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'role-login.html'));
+});
+
+// ----------------------------------------------------------------------------
 // Landing page 3D (page d'accueil marketing)
 // ----------------------------------------------------------------------------
 app.get('/lp', (req, res) => {

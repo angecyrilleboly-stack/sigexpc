@@ -132,53 +132,12 @@ document.getElementById('dismissInstallBtn').addEventListener('click', () => {
 });
 
 // ---------- Connexion ----------
-document.getElementById('btnLogin').addEventListener('click', handleLogin);
-document.getElementById('lPass').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
-
-async function handleLogin() {
-  const email = document.getElementById('lEmail').value.trim();
-  const pass = document.getElementById('lPass').value;
-  const role = document.getElementById('lRole').value;
-  const errBox = document.getElementById('loginError');
-  const btn = document.getElementById('btnLogin');
-
-  errBox.classList.remove('show');
-  if (!email || !pass) {
-    errBox.innerHTML = '<b>Champs manquants</b><br>Veuillez renseigner l\'email et le mot de passe.';
-    errBox.classList.add('show');
-    return;
-  }
-
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connexion...';
-
-  const res = await API.login(email, pass, role);
-  btn.disabled = false;
-  btn.innerHTML = '<i class="fas fa-right-to-bracket"></i> Se connecter';
-
-  if (res.success) {
-    USER = res.user;
-    enterApp();
-    toast(`Bienvenue, ${USER.nom} !`, 'success');
-  } else if (res.isBlocked) {
-    document.getElementById('payAEName').innerText = res.aeName || '—';
-    document.getElementById('loginView').style.display = 'none';
-    document.getElementById('paymentView').style.display = 'flex';
-    // Montant DYNAMIQUE renvoyé par le backend (défini par le super admin)
-    window._blockedAeId = res.aeId;
-    const montant = Number(res.montant || 200);
-    document.getElementById('payMontant').innerText = montant.toLocaleString('fr-FR') + ' FCFA';
-  } else {
-    errBox.innerHTML = `<b>Accès refusé</b><br>${esc(res.msg || res.error || 'Identifiants incorrects.')}`;
-    errBox.classList.add('show');
-  }
-}
+// (Connexion déplacée vers les pages dédiées par rôle : /drtp, /autoecole, /av, /sttc, /boly)
 
 function backToLogin() {
   document.getElementById('paymentView').style.display = 'none';
   document.getElementById('loginView').style.display = 'flex';
-  document.getElementById('lPass').value = '';
-  document.getElementById('lEmail').value = '';
+  // Le portail n'a plus de champs de saisie : rien à réinitialiser
 }
 
 // Redirection vers GeniusPay pour paiement d'abonnement
@@ -247,8 +206,6 @@ async function logout() {
   document.getElementById('sidebar').classList.remove('show');
   document.getElementById('main').classList.remove('show');
   document.getElementById('loginView').style.display = 'flex';
-  document.getElementById('lEmail').value = '';
-  document.getElementById('lPass').value = '';
   toast('Vous êtes déconnecté.', 'info');
 }
 

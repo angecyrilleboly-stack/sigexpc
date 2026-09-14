@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIGEXPC - Connexion</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚦</text></svg>">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#06402B">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="SIGEXPC">
+  <link rel="apple-touch-icon" href="/img/icon-192.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/css/styles.css?v=20260902">
+  <style>
+    /* Toast simple pour cette page autonome */
+    #toastContainer { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+    .toast-item { background: #06402B; color: #fff; padding: 14px 22px; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); animation: slideIn 0.3s; max-width: 350px; font-size: 0.92rem; }
+    .toast-item.success { background: #16a34a; }
+    .toast-item.error { background: #dc2626; }
+    @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    /* Bandeau indicatif du rôle */
+    .role-banner {
+      background: rgba(6,64,43, 0.08);
+      border: 1px solid rgba(6,64,43,0.3);
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      font-size: 0.82rem;
+      color: #06402B;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .role-banner i { color: #06402B; }
+    .role-banner a { color: #06402B; font-weight: 600; text-decoration: none; }
+    .role-banner a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <!-- ============================ TOASTS ============================ -->
+  <div id="toastContainer"></div>
+
+  <!-- ============================ ÉCRAN DE CONNEXION RÉSERVÉ AU RÔLE ============================ -->
+  <div id="loginView" class="login-screen">
+    <div class="login-card">
+
+      <img src="/img/logo.png" alt="SIGEXPC Logo" style="width: 250px; height: auto; margin-bottom: 15px; border-radius: 15px; box-shadow: 0 10px 15px rgba(0,0,0,0.1);">
+
+      <div class="role-banner" id="roleBanner">
+        <i id="roleIcon" class="fas fa-lock"></i> <b id="roleLabel">Espace réservé</b>
+      </div>
+
+      <input id="lEmail" type="email" placeholder="Email professionnel">
+      <input id="lPass" type="password" placeholder="Code secret d'accès">
+
+      <button class="btn-main" id="btnLogin" style="margin-top: 15px; font-size: 1.1rem;"><i class="fas fa-key"></i> DÉMARRER LA SESSION</button>
+
+      <div id="loginError" class="error-sign"></div>
+
+      <div style="margin-top: 18px; font-size: 0.8rem;">
+        <a href="/" style="color: #06402B; text-decoration: none; font-weight: 600;">
+          <i class="fas fa-arrow-left"></i> Retour au portail
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+<script>
+// ============================================================================
+//  JS de la page de connexion par rôle — le rôle est déterminé par l'URL :
+//  /drtp -> REGION | /av -> AGENT | /sttc -> STTC | /boly -> SUPER_ADMIN
+// ============================================================================
+const ROLE_PAGES = {
+  '/drtp': { role: 'REGION',      label: 'Espace réservé à la Direction Régionale', icon: 'fa-landmark',         title: 'SIGEXPC - Direction Régionale' },
+  '/av':   { role: 'AGENT',       label: 'Espace réservé aux Agents Vérificateurs', icon: 'fa-user-check',       title: 'SIGEXPC - Agent Vérificateur' },
+  '/sttc': { role: 'STTC',        label: 'Espace réservé au Service STTC',           icon: 'fa-building-columns', title: 'SIGEXPC - Service STTC' },
+  '/boly': { role: 'SUPER_ADMIN', label: 'Espace réservé au Super Admin',            icon: 'fa-user-shield',      title: 'SIGEXPC - Super Admin' }
+};
+
+const PAGE_CONF = ROLE_PAGES[window.location.pathname.replace(/\/+$/, '') || '/'] || ROLE_PAGES[window.location.pathname];
+if (!PAGE_CONF) {
+  // URL inconnue : retour au portail
+  window.location.href = '/';
+}
+document.title = PAGE_CONF.title;
+document.getElementById('roleLabel').innerText = PAGE_CONF.label;
+document.getElementById('roleIcon').className = 'fas ' + PAGE_CONF.icon;
+
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function toast(msg, type) {
+  const t = document.createElement('div');
+  t.className = 'toast-item ' + (type || 'info');
+  t.innerHTML = (type === 'success' ? '<i class="fas fa-check-circle"></i> ' : type === 'error' ? '<i class="fas fa-exclamation-circle"></i> ' : '<i class="fas fa-info-circle"></i> ') + esc(msg);
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 4000);
+}
+
+// ---------- Connexion (rôle forcé selon l'URL) ----------
+async function handleLogin() {
+  const email = document.getElementById('lEmail').value.trim();
+  const pass = document.getElementById('lPass').value;
+  const errBox = document.getElementById('loginError');
+  const btn = document.getElementById('btnLogin');
+
+  errBox.classList.remove('show');
+  if (!email || !pass) {
+    errBox.innerHTML = '<i class="fas fa-exclamation-triangle"></i><div><b>Champs manquants</b><br>Veuillez renseigner l\'email et le code secret.</div>';
+    errBox.classList.add('show');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connexion...';
+
+  try {
+    // Le rôle est TOUJOURS celui de cette page : impossible de se connecter
+    // ici avec un compte d'un autre rôle.
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email, motDePasse: pass, role: PAGE_CONF.role })
+    }).then(r => r.json());
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-key"></i> DÉMARRER LA SESSION';
+
+    if (res.success) {
+      toast('Connexion réussie ! Redirection...', 'success');
+      setTimeout(() => { window.location.href = '/'; }, 700);
+    } else {
+      errBox.innerHTML = `<i class="fas fa-exclamation-triangle"></i><div><b>Accès refusé</b><br>${esc(res.msg || res.error || 'Identifiants incorrects pour cet espace.')}</div>`;
+      errBox.classList.add('show');
+    }
+  } catch (e) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-key"></i> DÉMARRER LA SESSION';
+    errBox.innerHTML = `<i class="fas fa-exclamation-triangle"></i><div><b>Erreur réseau</b><br>${esc(e.message)}</div>`;
+    errBox.classList.add('show');
+  }
+}
+
+document.getElementById('btnLogin').addEventListener('click', handleLogin);
+document.getElementById('lPass').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+
+// Enregistrer le Service Worker (PWA)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+}
+</script>
+</body>
+</html>
