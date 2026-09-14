@@ -98,8 +98,9 @@ app.use(attachUser);
 
 // ----------------------------------------------------------------------------
 // Fichiers statiques (frontend)
+// index: false -> on gère manuellement '/' (landing page) et '/acces' (portail)
 // ----------------------------------------------------------------------------
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), { index: false }));
 
 // ----------------------------------------------------------------------------
 // Vérification d'abonnement : bloque les AUTO_ECOLES dont l'abonnement a expiré
@@ -147,17 +148,26 @@ app.get(['/drtp', '/av', '/sttc', '/boly'], (req, res) => {
 });
 
 // ----------------------------------------------------------------------------
-// Landing page 3D (page d'accueil marketing)
+// Page d'accueil = landing page ; le portail d'accès (cartes par rôle) sur /acces
 // ----------------------------------------------------------------------------
-app.get('/lp', (req, res) => {
+app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'lp.html'));
 });
 
+app.get('/acces', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Ancien lien de la landing : redirigé vers la nouvelle adresse (/)
+app.get('/lp', (req, res) => {
+  res.redirect(301, '/');
+});
+
 // ----------------------------------------------------------------------------
-// SPA fallback : toute autre route renvoie index.html
+// SPA fallback : toute autre route renvoie la landing page
 // ----------------------------------------------------------------------------
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'public', 'lp.html'));
 });
 
 // ----------------------------------------------------------------------------

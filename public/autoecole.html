@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-title" content="SIGEXPC">
   <link rel="apple-touch-icon" href="/img/icon-192.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="/css/styles.css?v=20260902">
+  <link rel="stylesheet" href="/css/styles.css?v=20260903">
   <style>
     /* Toast simple pour cette page autonome */
     #toastContainer { position: fixed; top: 20px; right: 20px; z-index: 9999; }
@@ -175,7 +175,7 @@ async function handleLogin() {
     if (res.success) {
       // Connexion OK → redirige vers l'app principale (déjà authentifié via cookie)
       toast('Connexion réussie ! Redirection...', 'success');
-      setTimeout(() => { window.location.href = '/'; }, 700);
+      setTimeout(() => { window.location.href = '/acces'; }, 700);
     } else if (res.isBlocked) {
       // AE suspendue → afficher l'écran de paiement
       _blockedAeId = res.aeId;

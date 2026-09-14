@@ -11,7 +11,7 @@
   <meta name="apple-mobile-web-app-title" content="SIGEXPC">
   <link rel="apple-touch-icon" href="/img/icon-192.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="/css/styles.css?v=20260902">
+  <link rel="stylesheet" href="/css/styles.css?v=20260903">
   <style>
     /* Toast simple pour cette page autonome */
     #toastContainer { position: fixed; top: 20px; right: 20px; z-index: 9999; }
@@ -59,7 +59,7 @@
       <div id="loginError" class="error-sign"></div>
 
       <div style="margin-top: 18px; font-size: 0.8rem;">
-        <a href="/" style="color: #06402B; text-decoration: none; font-weight: 600;">
+        <a href="/acces" style="color: #06402B; text-decoration: none; font-weight: 600;">
           <i class="fas fa-arrow-left"></i> Retour au portail
         </a>
       </div>
@@ -82,7 +82,7 @@ const ROLE_PAGES = {
 const PAGE_CONF = ROLE_PAGES[window.location.pathname.replace(/\/+$/, '') || '/'] || ROLE_PAGES[window.location.pathname];
 if (!PAGE_CONF) {
   // URL inconnue : retour au portail
-  window.location.href = '/';
+  window.location.href = '/acces';
 }
 document.title = PAGE_CONF.title;
 document.getElementById('roleLabel').innerText = PAGE_CONF.label;
