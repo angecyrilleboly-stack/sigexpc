@@ -2,7 +2,7 @@
 //  SIGEXPC - Service Worker (PWA) v3
 //  Cache agressif pour chargement instantané de toute l'application.
 // ============================================================================
-const CACHE_VERSION = 'sigexpc-v18-20261001';
+const CACHE_VERSION = 'sigexpc-v19-20261001';
 const CACHE_STATIC = CACHE_VERSION + '-static';
 const CACHE_PAGES = CACHE_VERSION + '-pages';
 const CACHE_API = CACHE_VERSION + '-api';
