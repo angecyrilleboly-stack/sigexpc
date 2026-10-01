@@ -81,18 +81,58 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
-// Session
-app.use(session({
-  name: 'sigexpc_sid',
-  secret: process.env.SESSION_SECRET || 'sigexpc-dev-secret',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 12, // 12h
-    sameSite: 'lax'
-  }
-}));
+// ----------------------------------------------------------------------------
+// Sessions : store PostgreSQL persistant dès qu'une base PG est configurée.
+// OBLIGATOIRE sur Vercel (plusieurs instances en parallèle : le MemoryStore
+// par défaut déconnecterait les utilisateurs aléatoirement).
+// En local sans PG (SQLite), on garde le comportement par défaut.
+// ----------------------------------------------------------------------------
+const isPgDb = (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('postgresql://'))
+  || (process.env.DB_HOST && process.env.DB_HOST.includes('supabase'));
+if (isPgDb) {
+  const pgSession = require('connect-pg-simple')(session);
+  const { Pool } = require('pg');
+  const sessionPool = new Pool({
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT) || 5432,
+    user: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_NAME || 'postgres',
+    ssl: process.env.DB_SSL === 'false' ? false : { rejectUnauthorized: false },
+    max: 5,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 8000,
+  });
+  app.use(session({
+    name: 'sigexpc_sid',
+    secret: process.env.SESSION_SECRET || 'sigexpc-dev-secret',
+    store: new pgSession({
+      pool: sessionPool,
+      createTableIfMissing: true,
+      tableName: 'user_sessions'
+    }),
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 12, // 12h
+      sameSite: 'lax',
+      secure: 'auto'
+    }
+  }));
+} else {
+  app.use(session({
+    name: 'sigexpc_sid',
+    secret: process.env.SESSION_SECRET || 'sigexpc-dev-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 12, // 12h
+      sameSite: 'lax'
+    }
+  }));
+}
 
 app.use(attachUser);
 
@@ -179,18 +219,40 @@ app.use((err, req, res, next) => {
 });
 
 // ----------------------------------------------------------------------------
-// Démarrage
+// Initialisation mémoïsée (compatibilité serverless Vercel) :
+// le module est importé à froid, des requêtes peuvent arriver avant toute init.
+// Un middleware garantit que l'init est terminée avant chaque requête.
 // ----------------------------------------------------------------------------
-app.listen(PORT, async () => {
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(`  🚦 SIGEXPC démarré sur http://localhost:${PORT}`);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  // Initialiser la base (création tables + import données) AVANT d'accepter les requêtes
-  await initDBIfNeeded();
-  // Scanner et bloquer les AE expirées (passe automatiquement à 'bloque')
-  await scannerEtBloquerAExpirées();
+let promesseInit = null;
+function initialiser() {
+  if (!promesseInit) {
+    promesseInit = (async () => {
+      // PostgreSQL (Supabase) : base déjà initialisée via migration
+      await initDBIfNeeded();
+      // Scanner et bloquer les AE expirées (passe automatiquement à 'bloque')
+      await scannerEtBloquerAExpirées();
+    })();
+  }
+  return promesseInit;
+}
+app.use((req, res, next) => {
+  initialiser().then(() => next()).catch(e => next(e));
+});
+
+// ----------------------------------------------------------------------------
+// Export pour les plateformes serverless (Vercel) : elles gèrent le HTTP.
+// L'écoute et les tâches planifiées ne tournent qu'en hébergement persistant.
+// ----------------------------------------------------------------------------
+module.exports = app;
+
+if (!process.env.VERCEL) {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(`  🚦 SIGEXPC démarré sur http://localhost:${PORT}`);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  });
   // Démarrer le job de rappel d'expiration d'abonnement (J-3)
   demarrerJobRappel();
   // Rescan toutes les heures (en cas d'expiration en cours de fonctionnement)
   setInterval(() => { scannerEtBloquerAExpirées(); }, 60 * 60 * 1000);
-});
+}

@@ -17,3 +17,6 @@ data/
 *_abo.json
 *_check.js
 *_block.json
+
+.vercel
+.env*
