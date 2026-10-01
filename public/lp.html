@@ -6,6 +6,12 @@
   <title>SIGEXPC - Examen du Permis de Conduire | Côte d'Ivoire</title>
   <meta name="description" content="SIGEXPC - Système de Gestion des Examens du Permis de Conduire en Côte d'Ivoire. Permis à points, infractions, dossiers de candidature et catégories du permis.">
   <link rel="icon" href="/img/icon-192.png">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#06402B">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SIGEXPC">
+  <link rel="apple-touch-icon" href="/img/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   <style>
@@ -985,6 +991,75 @@
     const el = document.getElementById(id); if (el) sio.observe(el);
   });
 })();
+</script>
+
+<!-- ================= BANNIÈRE INSTALLATION PWA ================= -->
+<div id="installBanner" style="display:none; position:fixed; bottom:18px; left:18px; right:18px; max-width:430px; margin:0 auto; z-index:5000; background:rgba(16,22,39,0.92); backdrop-filter:blur(14px); border:1px solid rgba(255,255,255,0.14); border-radius:20px; padding:16px; box-shadow:0 24px 48px rgba(0,0,0,0.5); animation:pwaSlideUp .45s cubic-bezier(.16,1,.3,1) both;">
+  <div style="display:flex; align-items:center; gap:13px;">
+    <div style="width:46px; height:46px; flex:none; border-radius:13px; background:linear-gradient(135deg,#ffd675,#f5a524); display:flex; align-items:center; justify-content:center; box-shadow:0 8px 18px rgba(245,165,36,0.4);">
+      <img src="/img/logo.png" alt="" style="width:34px; height:34px; object-fit:contain; border-radius:9px;">
+    </div>
+    <div style="flex:1; min-width:0;">
+      <p style="margin:0; font-weight:800; font-size:0.95rem; color:var(--text);">Installer SIGEXPC</p>
+      <p style="margin:2px 0 0; font-size:0.78rem; color:var(--muted); line-height:1.35;">Application rapide, notifications et accès hors ligne</p>
+      <p id="installIosHint" style="display:none; margin:5px 0 0; font-size:0.75rem; color:#dfe7f3;">
+        Sur iPhone : bouton <b>Partager</b> puis <b>« Sur l'écran d'accueil »</b>
+      </p>
+    </div>
+  </div>
+  <div style="display:flex; gap:10px; margin-top:13px;">
+    <button id="dismissInstallBtn" style="flex:1; background:rgba(255,255,255,0.08); color:var(--muted); border:1px solid var(--border); padding:11px; border-radius:12px; font-weight:700; font-size:0.85rem; cursor:pointer; font-family:inherit;">Plus tard</button>
+    <button id="installBtn" style="flex:1; background:linear-gradient(135deg,#ffd675,#f5a524); color:#111; border:none; padding:11px; border-radius:12px; font-weight:800; font-size:0.85rem; cursor:pointer; font-family:inherit; box-shadow:0 8px 18px rgba(245,165,36,0.35);">Installer</button>
+  </div>
+</div>
+<style>@keyframes pwaSlideUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }</style>
+
+<script>
+/* ===== PWA : Service Worker + invite d'installation ===== */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+}
+
+let _pwaPrompt = null;
+const PWA_DISMISS_KEY = 'sigexpc-install-dismissed-at';
+
+function pwaStandalone() {
+  return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function pwaIsIOS() {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+function pwaRecentlyDismissed() {
+  const t = Number(localStorage.getItem(PWA_DISMISS_KEY) || 0);
+  return Date.now() - t < 24 * 60 * 60 * 1000;
+}
+function showPwaBanner() {
+  const b = document.getElementById('installBanner');
+  if (!b || pwaStandalone() || pwaRecentlyDismissed()) return;
+  if (pwaIsIOS()) {
+    document.getElementById('installIosHint').style.display = 'block';
+    document.getElementById('installBtn').style.display = 'none';
+  }
+  b.style.display = 'block';
+}
+window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); _pwaPrompt = e; setTimeout(showPwaBanner, 2500); });
+setTimeout(showPwaBanner, 5000); /* filet de sécurité si beforeinstallprompt ne vient pas */
+window.addEventListener('appinstalled', () => {
+  _pwaPrompt = null;
+  document.getElementById('installBanner').style.display = 'none';
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if (!_pwaPrompt) return; /* iOS : bouton masqué, astuce affichée */
+  _pwaPrompt.prompt();
+  const { outcome } = await _pwaPrompt.userChoice;
+  _pwaPrompt = null;
+  if (outcome === 'accepted') document.getElementById('installBanner').style.display = 'none';
+  else { localStorage.setItem(PWA_DISMISS_KEY, String(Date.now())); document.getElementById('installBanner').style.display = 'none'; }
+});
+document.getElementById('dismissInstallBtn').addEventListener('click', () => {
+  localStorage.setItem(PWA_DISMISS_KEY, String(Date.now()));
+  document.getElementById('installBanner').style.display = 'none';
+});
 </script>
 </body>
 </html>

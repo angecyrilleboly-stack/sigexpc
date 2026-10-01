@@ -1,8 +1,9 @@
 {
+  "id": "/",
   "name": "SIGEXPC - Examen du Permis de Conduire",
   "short_name": "SIGEXPC",
   "description": "Système de Gestion des Examens du Permis de Conduire - Côte d'Ivoire",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
@@ -31,16 +32,13 @@
       "purpose": "maskable"
     }
   ],
-  "screenshots": [
-    {
-      "src": "/img/screenshot-desktop.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Tableau de bord SIGEXPC"
-    }
-  ],
   "shortcuts": [
+    {
+      "name": "Portail de connexion",
+      "short_name": "Connexion",
+      "description": "Accéder au portail de connexion SIGEXPC",
+      "url": "/acces"
+    },
     {
       "name": "Connexion Auto-École",
       "short_name": "Auto-École",
@@ -48,10 +46,10 @@
       "url": "/autoecole"
     },
     {
-      "name": "Landing Page",
-      "short_name": "Accueil",
-      "description": "Page d'accueil SIGEXPC",
-      "url": "/lp"
+      "name": "Quiz Code",
+      "short_name": "Quiz",
+      "description": "Tester le quiz du code de la route",
+      "url": "/quiz.html"
     }
   ]
 }

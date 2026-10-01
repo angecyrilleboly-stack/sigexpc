@@ -2,16 +2,21 @@
 //  SIGEXPC - Service Worker (PWA) v3
 //  Cache agressif pour chargement instantané de toute l'application.
 // ============================================================================
-const CACHE_VERSION = 'sigexpc-v15-20260903';
+const CACHE_VERSION = 'sigexpc-v16-20261001';
 const CACHE_STATIC = CACHE_VERSION + '-static';
 const CACHE_PAGES = CACHE_VERSION + '-pages';
 const CACHE_API = CACHE_VERSION + '-api';
 
 // Fichiers à précharger immédiatement (CSS, JS, images)
-// '/' = landing page (accueil) ; '/acces' = portail de connexion
+// '/' = landing (accueil) ; '/acces' = portail ; pages de rôle préinstallées
 const PRECACHE_URLS = [
   '/',
   '/acces',
+  '/drtp',
+  '/av',
+  '/sttc',
+  '/boly',
+  '/quiz.html',
   '/index.html',
   '/autoecole.html',
   '/offline.html',
