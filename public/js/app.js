@@ -11,10 +11,30 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   // Vérifier session existante
   checkSession();
-  // Enregistrer le Service Worker (PWA)
+  // Enregistrer le Service Worker (PWA) — mise à jour toujours vérifiée
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js', { scope: '/' })
-      .then((reg) => console.log('SW enregistré:', reg.scope))
+    navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' })
+      .then((reg) => {
+        // Activer immédiatement un SW en attente puis recharger une seule fois
+        if (reg.waiting) reg.waiting.postMessage('SKIP_WAITING');
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener('statechange', () => {
+            if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+              nw.postMessage('SKIP_WAITING');
+            }
+          });
+        });
+        let reloaded = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (reloaded) return;
+          reloaded = true;
+          window.location.reload();
+        });
+        // Vérifier les mises à jour à chaque chargement
+        reg.update().catch(() => {});
+      })
       .catch((err) => console.log('SW erreur:', err));
   }
 });

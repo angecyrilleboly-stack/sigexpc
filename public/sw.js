@@ -2,7 +2,7 @@
 //  SIGEXPC - Service Worker (PWA) v3
 //  Cache agressif pour chargement instantané de toute l'application.
 // ============================================================================
-const CACHE_VERSION = 'sigexpc-v19-20261001';
+const CACHE_VERSION = 'sigexpc-v20-20261001';
 const CACHE_STATIC = CACHE_VERSION + '-static';
 const CACHE_PAGES = CACHE_VERSION + '-pages';
 const CACHE_API = CACHE_VERSION + '-api';
@@ -100,12 +100,16 @@ self.addEventListener('fetch', (event) => {
   }
 
   // --- Pages HTML : Stale While Revalidate (afficher cache immédiatement, MAJ en arrière-plan) ---
+  // NB : clés de cache = URL texte (les requêtes navigate ne peuvent pas être
+  // re-passées à fetch() telles quelles) ; on fetch par URL pour que la
+  // revalidation en arrière-plan fonctionne réellement.
   if (req.mode === 'navigate' || req.destination === 'document' || url.pathname.endsWith('.html')) {
     event.respondWith(
       caches.open(CACHE_PAGES).then((cache) => {
-        return cache.match(req).then((cached) => {
-          const fetchPromise = fetch(req).then((res) => {
-            if (res.ok) cache.put(req, res.clone());
+        const key = url.pathname + url.search;
+        return cache.match(key).then((cached) => {
+          const fetchPromise = fetch(req.url).then((res) => {
+            if (res.ok) cache.put(key, res.clone());
             return res;
           }).catch(() => cached || caches.match('/offline.html'));
           return cached || fetchPromise;

@@ -1037,9 +1037,25 @@
 <style>@keyframes pwaSlideUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }</style>
 
 <script>
-/* ===== PWA : Service Worker + invite d'installation ===== */
+/* ===== PWA : Service Worker (mise à jour toujours vérifiée) + invite d'installation ===== */
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {});
+  navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' }).then(function (reg) {
+    if (reg.waiting) reg.waiting.postMessage('SKIP_WAITING');
+    reg.addEventListener('updatefound', function () {
+      var nw = reg.installing;
+      if (!nw) return;
+      nw.addEventListener('statechange', function () {
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) nw.postMessage('SKIP_WAITING');
+      });
+    });
+    var reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (reloaded) return;
+      reloaded = true;
+      window.location.reload();
+    });
+    reg.update().catch(function () {});
+  }).catch(function () {});
 }
 
 let _pwaPrompt = null;
