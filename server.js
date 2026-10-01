@@ -139,8 +139,18 @@ app.use(attachUser);
 // ----------------------------------------------------------------------------
 // Fichiers statiques (frontend)
 // index: false -> on gère manuellement '/' (landing page) et '/acces' (portail)
+// Cache-Control must-revalidate : le cache HTTP du navigateur ne doit JAMAIS
+// servir de HTML/JS périmé après un déploiement (source de comportements
+// incohérents : anciennes redirections, anciens écrans).
 // ----------------------------------------------------------------------------
-app.use(express.static(path.join(__dirname, 'public'), { index: false }));
+app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+  next();
+});
+app.use(express.static(path.join(__dirname, 'public'), {
+  index: false,
+  setHeaders: (res) => res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate')
+}));
 
 // ----------------------------------------------------------------------------
 // Vérification d'abonnement : bloque les AUTO_ECOLES dont l'abonnement a expiré
