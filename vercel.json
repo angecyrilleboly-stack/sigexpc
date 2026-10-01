@@ -3,8 +3,15 @@
     { "src": "api.js", "use": "@vercel/node", "config": { "includeFiles": "public/**" } },
     { "src": "public/**", "use": "@vercel/static" }
   ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    }
+  ],
   "routes": [
-    { "src": "/(.*)", "headers": { "cache-control": "public, max-age=0, must-revalidate" }, "continue": true },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/api.js" }
   ]
