@@ -12,6 +12,20 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="SIGEXPC">
   <link rel="apple-touch-icon" href="/img/icon-192.png">
+  <script>
+    /* Utilisateur déjà connecté (session active) ? -> direct au tableau de bord.
+       Couvre : ouverture de la PWA installée, retour sur "/", anciens liens. */
+    (function () {
+      try {
+        fetch('/api/auth/me', { credentials: 'include' })
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            if (res && res.success && res.user) window.location.replace('/acces');
+          })
+          .catch(function () {});
+      } catch (e) {}
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800;900&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   <style>
