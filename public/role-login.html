@@ -130,7 +130,8 @@ async function handleLogin() {
 
     if (res.success) {
       toast('Connexion réussie ! Redirection...', 'success');
-      setTimeout(() => { window.location.href = '/'; }, 700);
+      try { localStorage.setItem('sigexpc-logged-in', '1'); } catch (e) {}
+      setTimeout(() => { window.location.href = '/acces'; }, 500);
     } else {
       errBox.innerHTML = `<i class="fas fa-exclamation-triangle"></i><div><b>Accès refusé</b><br>${esc(res.msg || res.error || 'Identifiants incorrects pour cet espace.')}</div>`;
       errBox.classList.add('show');

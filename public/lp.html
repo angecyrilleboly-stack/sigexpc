@@ -13,14 +13,23 @@
   <meta name="apple-mobile-web-app-title" content="SIGEXPC">
   <link rel="apple-touch-icon" href="/img/icon-192.png">
   <script>
-    /* Utilisateur déjà connecté (session active) ? -> direct au tableau de bord.
+    /* Utilisateur déjà connecté ? -> redirection INSTANTANÉE vers le tableau
+       de bord (drapeau localStorage, avant le premier rendu : aucun flash).
        Couvre : ouverture de la PWA installée, retour sur "/", anciens liens. */
     (function () {
       try {
+        if (localStorage.getItem('sigexpc-logged-in') === '1') {
+          window.location.replace('/acces');
+          return;
+        }
+        /* Filet de sécurité : drapeau absent mais session vivante */
         fetch('/api/auth/me', { credentials: 'include' })
           .then(function (r) { return r.json(); })
           .then(function (res) {
-            if (res && res.success && res.user) window.location.replace('/acces');
+            if (res && res.success && res.user) {
+              try { localStorage.setItem('sigexpc-logged-in', '1'); } catch (e) {}
+              window.location.replace('/acces');
+            }
           })
           .catch(function () {});
       } catch (e) {}
@@ -470,7 +479,6 @@
     <a href="#documents">Documents</a>
     <a href="#categories">Catégories</a>
     <a href="/quiz.html">Quiz</a>
-    <a href="/acces" style="color:#ffd675;font-weight:700;">Connexion</a>
   </div>
   <button class="burger" id="burger" aria-label="Menu"><span></span><span></span><span></span></button>
 </nav>

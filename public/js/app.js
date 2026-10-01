@@ -53,8 +53,13 @@ async function checkSession() {
     if (res.success) {
       USER = res.user;
       enterApp();
+    } else {
+      try { localStorage.removeItem('sigexpc-logged-in'); } catch (e2) {}
     }
-  } catch (e) { /* pas connecté */ }
+  } catch (e) {
+    // Pas connecté (session absente ou expirée) : synchroniser le drapeau
+    try { localStorage.removeItem('sigexpc-logged-in'); } catch (e2) {}
+  }
 }
 
 // ---------- Installation PWA (relance pour inciter à installer) ----------
@@ -203,10 +208,10 @@ async function logout() {
   if (!ok) return;
   await API.logout();
   USER = null;
-  document.getElementById('sidebar').classList.remove('show');
-  document.getElementById('main').classList.remove('show');
-  document.getElementById('loginView').style.display = 'flex';
+  try { localStorage.removeItem('sigexpc-logged-in'); } catch (e) {}
   toast('Vous êtes déconnecté.', 'info');
+  // Redirection directe vers la page d'accueil
+  setTimeout(() => { window.location.href = '/'; }, 600);
 }
 
 // ---------- Menu latéral ----------

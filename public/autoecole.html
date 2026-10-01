@@ -175,7 +175,8 @@ async function handleLogin() {
     if (res.success) {
       // Connexion OK → redirige vers l'app principale (déjà authentifié via cookie)
       toast('Connexion réussie ! Redirection...', 'success');
-      setTimeout(() => { window.location.href = '/acces'; }, 700);
+      try { localStorage.setItem('sigexpc-logged-in', '1'); } catch (e) {}
+      setTimeout(() => { window.location.href = '/acces'; }, 500);
     } else if (res.isBlocked) {
       // AE suspendue → afficher l'écran de paiement
       _blockedAeId = res.aeId;
