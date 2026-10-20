@@ -23,7 +23,7 @@ jobs:
       - name: Ping SIGEXPC (avec relance si échec)
         run: |
           for i in 1 2 3; do
-            CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 100 https://sigexpc.onrender.com/ || echo "ERR")
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 100 https://sigexpc.vercel.app/api/health || echo "ERR")
             echo "Tentative $i -> HTTP $CODE ($(date -u '+%Y-%m-%d %H:%M:%S UTC'))"
             if [ "$CODE" = "200" ]; then
               echo "Site réveillé avec succès."

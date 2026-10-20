@@ -175,9 +175,16 @@ app.use('/api/stats', statsRoutes);
 app.use('/api/abonnements', abonnementRoutes);
 app.use('/api/documents', documentRoutes);
 
-// Route santé
-app.get('/api/health', (req, res) => {
-  res.json({ success: true, message: 'SIGEXPC API opérationnelle', time: new Date().toISOString() });
+// Route santé — effectue une vraie requête SQL : les pings keep-alive
+// (toutes les 5 min) maintiennent ainsi la base Supabase active et
+// l'empêchent d'être mise en pause pour inactivité (plan gratuit).
+app.get('/api/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ success: true, message: 'SIGEXPC API opérationnelle', db: 'up', time: new Date().toISOString() });
+  } catch (e) {
+    res.status(503).json({ success: false, message: 'Base de données injoignable', db: 'down', error: e.code || e.message, time: new Date().toISOString() });
+  }
 });
 
 // ----------------------------------------------------------------------------
