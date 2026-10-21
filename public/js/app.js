@@ -250,6 +250,8 @@ function buildMenu() {
       html += navItem('recus', 'fa-receipt', 'Reçus de paiement');
       html += sectionTitle('Paramètres');
       html += navItem('abo-params', 'fa-cog', 'Paramètres abonnement');
+      html += sectionTitle('Sécurité');
+      html += navItem('journal', 'fa-shield-halved', 'Journal de sécurité');
     } else if (r === 'REGION') {
       html += sectionTitle('Examens');
       html += navItem('examens', 'fa-calendar-days', 'Planification examens');
@@ -340,6 +342,7 @@ async function navTo(el, target) {
       'deliberes-ae': openDeliberesAE,
       'mon-abonnement': openMonAbonnement,
       'securite': openSecurite,
+      'journal': openJournal,
       'permis': openPermis
     };
     if (map[target]) await map[target]();

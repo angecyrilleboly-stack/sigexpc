@@ -42,6 +42,9 @@ async function checkPass(input, stored) {
   return input === String(stored);
 }
 
+// Journal de sécurité
+const { journaliser } = require('../config/journal');
+
 // ----------------------------------------------------------------------------
 // POST /api/auth/login
 // ----------------------------------------------------------------------------
@@ -61,7 +64,10 @@ router.post('/login', async (req, res) => {
     );
     const row = rows[0];
 
-    if (!row) return res.json({ success: false, msg: 'Identifiants incorrects.' });
+    if (!row) {
+      journaliser({ type: 'CONNEXION_ECHOUEE', role, identifiant: email, req, details: 'Compte introuvable pour ce rôle' });
+      return res.json({ success: false, msg: 'Identifiants incorrects.' });
+    }
 
     // AUTO_ECOLE : si le mot de passe principal ne correspond pas,
     // essayer les mots de passe des collaborateurs (connexion avec l'email de l'AE).
@@ -77,6 +83,7 @@ router.post('/login', async (req, res) => {
             // AE bloquée : statut !== 'actif' (bloquée par admin OU abonnement expiré)
             // Réactivation possible uniquement par : super admin OU paiement GeniusPay
             if (row.statut !== 'actif') {
+              journaliser({ type: 'COMPTE_BLOQUE', role, utilisateur: row.nom, identifiant: email, req, details: 'Tentative de connexion sur auto-école bloquée (abonnement)' });
               try {
                 const [p] = await pool.query('SELECT montant FROM parametres_abonnement ORDER BY id DESC LIMIT 1');
                 const montant = Number(p[0]?.montant) || 200;
@@ -90,6 +97,7 @@ router.post('/login', async (req, res) => {
               role: 'AUTO_ECOLE', idRegion: row.id_region || '',
               isMain: false, subRole: s.role
             };
+            journaliser({ type: 'CONNEXION_REUSSIE', role, utilisateur: s.nom + ' (' + (s.role === 'GERANT' ? 'Gérant' : 'Secrétaire') + ')', identifiant: email, req, details: 'Auto-école : ' + row.nom });
             req.session.user = user;
             return req.session.save
               ? req.session.save((err) => {
@@ -103,6 +111,7 @@ router.post('/login', async (req, res) => {
           }
         }
       }
+      journaliser({ type: 'CONNEXION_ECHOUEE', role, utilisateur: row[cfg.nameCol] || '', identifiant: email, req, details: 'Mot de passe incorrect' });
       return res.json({ success: false, msg: 'Identifiants incorrects.' });
     }
 
@@ -110,6 +119,7 @@ router.post('/login', async (req, res) => {
     // (bloquée par admin OU abonnement expiré automatiquement)
     // Réactivation possible uniquement par : super admin OU paiement GeniusPay
     if (role === 'AUTO_ECOLE' && row.statut !== 'actif') {
+      journaliser({ type: 'COMPTE_BLOQUE', role, utilisateur: row[cfg.nameCol], identifiant: email, req, details: 'Tentative de connexion sur auto-école bloquée' });
       try {
         const [p] = await pool.query('SELECT montant FROM parametres_abonnement ORDER BY id DESC LIMIT 1');
         const montant = Number(p[0]?.montant) || 200;
@@ -127,6 +137,7 @@ router.post('/login', async (req, res) => {
       isMain: role === 'AUTO_ECOLE',
       subRole: role === 'AUTO_ECOLE' ? 'GERANT' : null
     };
+    journaliser({ type: 'CONNEXION_REUSSIE', role, utilisateur: user.nom, identifiant: email, req });
     req.session.user = user;
     req.session.save((err) => {
       if (err) {
@@ -149,6 +160,8 @@ router.get('/me', (req, res) => {
 
 // ----------------------------------------------------------------------------
 router.post('/logout', (req, res) => {
+  const u = req.session && req.session.user;
+  if (u) journaliser({ type: 'DECONNEXION', role: u.role, utilisateur: u.nom, identifiant: u.identifiant || '', req });
   req.session.destroy(() => { res.clearCookie('sigexpc_sid'); res.json({ success: true }); });
 });
 
@@ -169,6 +182,7 @@ router.post('/password', async (req, res) => {
       }
       const hash = await bcrypt.hash(newPass, 10);
       await pool.query('UPDATE auto_ecoles SET mot_de_passe = ? WHERE id = ?', [hash, id]);
+      journaliser({ type: 'MOT_DE_PASSE_MODIFIE', role: 'AUTO_ECOLE', utilisateur: rows[0].nom, identifiant: rows[0].email_admin, req, details: 'Mot de passe principal modifié' });
     } else {
       const [rows] = await pool.query('SELECT * FROM auto_ecoles_staff WHERE id = ? LIMIT 1', [staffId]);
       if (!rows.length) return res.json({ success: false, msg: 'Utilisateur introuvable.' });
@@ -177,6 +191,7 @@ router.post('/password', async (req, res) => {
       }
       const hash = await bcrypt.hash(newPass, 10);
       await pool.query('UPDATE auto_ecoles_staff SET code = ? WHERE id = ?', [hash, staffId]);
+      journaliser({ type: 'MOT_DE_PASSE_MODIFIE', role: 'AUTO_ECOLE', utilisateur: rows[0].nom, identifiant: rows[0].email || '', req, details: 'Mot de passe collaborateur modifié' });
     }
     res.json({ success: true });
   } catch (err) { res.status(500).json({ success: false, msg: err.message }); }

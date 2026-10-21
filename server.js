@@ -66,6 +66,7 @@ const candidatRoutes = require('./src/routes/candidats');
 const statsRoutes = require('./src/routes/stats');
 const abonnementRoutes = require('./src/routes/abonnements');
 const documentRoutes = require('./src/routes/documents');
+const journalRoutes = require('./src/routes/journal');
 const { attachUser } = require('./src/middleware/auth');
 const { requireActiveAbonnement, scannerEtBloquerAExpirées } = require('./src/middleware/checkAbonnement');
 const { demarrerJobRappel } = require('./src/config/rappelJob');
@@ -174,6 +175,7 @@ app.use('/api/candidats', candidatRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/abonnements', abonnementRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/journal', journalRoutes); // /api/journal (Super Admin)
 
 // Route santé — effectue une vraie requête SQL : les pings keep-alive
 // (toutes les 5 min) maintiennent ainsi la base Supabase active et
@@ -246,6 +248,20 @@ function initialiser() {
     promesseInit = (async () => {
       // PostgreSQL (Supabase) : base déjà initialisée via migration
       await initDBIfNeeded();
+      // Journal de sécurité : table auto-gérée (idempotent)
+      try {
+        await pool.query(`CREATE TABLE IF NOT EXISTS journal_securite (
+          id SERIAL PRIMARY KEY,
+          date_evenement TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          type VARCHAR(50) NOT NULL,
+          role VARCHAR(30),
+          utilisateur VARCHAR(150),
+          identifiant VARCHAR(150),
+          ip VARCHAR(60),
+          user_agent VARCHAR(300),
+          details VARCHAR(600)
+        )`);
+      } catch (e) { console.error('Init journal:', e.message); }
       // Scanner et bloquer les AE expirées (passe automatiquement à 'bloque')
       await scannerEtBloquerAExpirées();
     })();

@@ -888,3 +888,156 @@ async function saveResponsables() {
   if (res.success) toast('Responsables enregistrés.', 'success');
   else toast(res.msg || 'Erreur.', 'error');
 }
+
+
+// ============================================================================
+//  JOURNAL DE SÉCURITÉ (Super Admin) — vue, filtres, pagination
+// ============================================================================
+const JR_TYPES = {
+  CONNEXION_REUSSIE: { label: 'Connexion réussie', badge: 'badge-success', icone: 'fa-right-to-bracket' },
+  CONNEXION_ECHOUEE: { label: 'Connexion échouée', badge: 'badge-danger', icone: 'fa-triangle-exclamation' },
+  DECONNEXION: { label: 'Déconnexion', badge: 'badge-gray', icone: 'fa-right-from-bracket' },
+  COMPTE_BLOQUE: { label: 'Compte bloqué', badge: 'badge-warning', icone: 'fa-lock' },
+  COMPTE_REACTIVE: { label: 'Compte réactivé', badge: 'badge-success', icone: 'fa-unlock' },
+  COMPTE_CREE: { label: 'Compte créé', badge: 'badge-info', icone: 'fa-user-plus' },
+  COMPTE_SUPPRIME: { label: 'Compte supprimé', badge: 'badge-danger', icone: 'fa-user-minus' },
+  MOT_DE_PASSE_MODIFIE: { label: 'Mot de passe modifié', badge: 'badge-warning', icone: 'fa-key' },
+  ACCES_REFUSE: { label: 'Accès refusé', badge: 'badge-danger', icone: 'fa-ban' }
+};
+const JR_ROLES = { SUPER_ADMIN: 'Super Admin', REGION: 'Direction Régionale', AGENT: 'Agent Vérificateur', STTC: 'Service STTC', AUTO_ECOLE: 'Auto-École' };
+let jrState = { page: 1, type: '', q: '', periode: '7' };
+
+async function openJournal() {
+  const content = document.getElementById('content');
+  content.innerHTML = `
+    <div class="page-title-row">
+      <h2 style="margin:0;"><i class="fas fa-shield-halved" style="color:var(--coral);margin-right:8px;"></i>Journal de sécurité</h2>
+      <div class="flex gap-8">
+        <select id="jrPeriode" style="width:auto;margin:0;">
+          <option value="1">Aujourd'hui</option>
+          <option value="7" selected>7 derniers jours</option>
+          <option value="30">30 derniers jours</option>
+          <option value="90">90 derniers jours</option>
+        </select>
+      </div>
+    </div>
+    <div class="stats-grid" id="jrStats">
+      <div class="skeleton" style="height:110px;"></div><div class="skeleton" style="height:110px;"></div>
+      <div class="skeleton" style="height:110px;"></div><div class="skeleton" style="height:110px;"></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h3 style="margin:0;"><i class="fas fa-list" style="color:var(--coral);margin-right:6px;"></i>Événements</h3>
+        <div class="flex gap-8" style="flex-wrap:wrap;">
+          <select id="jrType" style="width:auto;margin:0;">
+            <option value="">Tous les types</option>
+            ${Object.entries(JR_TYPES).map(([k, t]) => `<option value="${k}">${t.label}</option>`).join('')}
+          </select>
+          <select id="jrRole" style="width:auto;margin:0;">
+            <option value="">Tous les rôles</option>
+            ${Object.entries(JR_ROLES).map(([k, l]) => `<option value="${k}">${l}</option>`).join('')}
+          </select>
+          <div class="search-box" style="width:230px;">
+            <i class="fas fa-search" style="color:var(--gray);"></i>
+            <input id="jrQ" placeholder="Rechercher (nom, email, IP...)">
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap" id="jrTable">${'<div class="skeleton" style="height:30px;margin:8px;"></div>'.repeat(6)}</div>
+      <div id="jrPager" style="display:flex;justify-content:space-between;align-items:center;padding:14px 6px 4px;flex-wrap:wrap;gap:10px;"></div>
+    </div>`;
+
+  document.getElementById('jrPeriode').addEventListener('change', (e) => { jrState.periode = e.target.value; jrState.page = 1; jrChargerStats(); jrChargerEvenements(); });
+  document.getElementById('jrType').addEventListener('change', (e) => { jrState.type = e.target.value; jrState.page = 1; jrChargerEvenements(); });
+  document.getElementById('jrRole').addEventListener('change', (e) => { jrState.page = 1; jrChargerEvenements(); });
+  let jrTimer = null;
+  document.getElementById('jrQ').addEventListener('input', (e) => {
+    clearTimeout(jrTimer);
+    jrTimer = setTimeout(() => { jrState.q = e.target.value.trim(); jrState.page = 1; jrChargerEvenements(); }, 400);
+  });
+
+  jrChargerStats();
+  jrChargerEvenements();
+}
+
+async function jrChargerStats() {
+  try {
+    const res = await API._fetch('/api/journal/stats?periode=' + jrState.periode);
+    const el = document.getElementById('jrStats');
+    if (!el) return;
+    if (!res || !res.success) { el.innerHTML = '<div class="empty-state"><p>Statistiques indisponibles</p></div>'; return; }
+    const s = res.stats || {};
+    const cartes = [
+      ['Connexions réussies', s.CONNEXION_REUSSIE || 0, 'fa-right-to-bracket', 'var(--success)'],
+      ['Connexions échouées', s.CONNEXION_ECHOUEE || 0, 'fa-triangle-exclamation', 'var(--danger)'],
+      ['Déconnexions', s.DECONNEXION || 0, 'fa-right-from-bracket', 'var(--gray)'],
+      ['Comptes bloqués', s.COMPTE_BLOQUE || 0, 'fa-lock', 'var(--yellow)']
+    ];
+    el.innerHTML = cartes.map(([label, val, ico, couleur]) => `
+      <div class="stat-card">
+        <i class="fas ${ico} stat-icon-bg"></i>
+        <div class="stat-value" style="color:${couleur};">${Number(val).toLocaleString('fr-FR')}</div>
+        <div class="stat-label">${label}</div>
+      </div>`).join('');
+  } catch (e) { /* silencieux */ }
+}
+
+async function jrChargerEvenements() {
+  const el = document.getElementById('jrTable');
+  const pager = document.getElementById('jrPager');
+  if (!el) return;
+  try {
+    const params = new URLSearchParams({ page: jrState.page, limit: 25, periode: jrState.periode });
+    if (jrState.type) params.set('type', jrState.type);
+    if (jrState.q) params.set('q', jrState.q);
+    const res = await API._fetch('/api/journal?' + params.toString());
+    if (!res || !res.success) {
+      el.innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><p>' + ((res && (res.msg || res.error)) || 'Impossible de charger le journal.') + '</p></div>';
+      if (pager) pager.innerHTML = '';
+      return;
+    }
+    const events = res.events || [];
+    if (!events.length) {
+      el.innerHTML = '<div class="empty-state"><i class="fas fa-shield-halved"></i><p>Aucun événement pour ces filtres.</p></div>';
+      if (pager) pager.innerHTML = '';
+      return;
+    }
+    el.innerHTML = `<table>
+      <thead><tr>
+        <th>Date &amp; heure</th><th>Type</th><th>Utilisateur</th><th>Rôle</th><th>Identifiant</th><th>IP</th><th>Détails</th>
+      </tr></thead>
+      <tbody>
+        ${events.map(ev => {
+          const t = JR_TYPES[ev.type] || { label: ev.type, badge: 'badge-gray', icone: 'fa-circle-info' };
+          const d = ev.date_evenement ? new Date(String(ev.date_evenement).includes('T') ? ev.date_evenement : String(ev.date_evenement).replace(' ', 'T') + 'Z') : null;
+          const dateTxt = d ? d.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+          return `<tr>
+            <td style="white-space:nowrap;">${dateTxt}</td>
+            <td><span class="badge ${t.badge}"><i class="fas ${t.icone}" style="margin-right:5px;"></i>${t.label}</span></td>
+            <td style="font-weight:600;">${esc(ev.utilisateur || '—')}</td>
+            <td>${JR_ROLES[ev.role] || esc(ev.role || '—')}</td>
+            <td>${esc(ev.identifiant || '—')}</td>
+            <td style="font-family:monospace;font-size:0.82rem;">${esc(ev.ip || '—')}</td>
+            <td style="font-size:0.85rem;color:var(--text-soft);max-width:220px;">${esc(ev.details || '')}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+    const total = res.total || 0;
+    const pages = Math.max(1, Math.ceil(total / (res.limit || 25)));
+    if (pager) {
+      pager.innerHTML = `
+        <span style="color:var(--gray);font-size:0.85rem;">${total.toLocaleString('fr-FR')} événement(s) — page ${res.page} sur ${pages}</span>
+        <div class="flex gap-8">
+          <button class="btn btn-ghost btn-sm" id="jrPrev" ${res.page <= 1 ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}><i class="fas fa-chevron-left"></i> Précédent</button>
+          <button class="btn btn-ghost btn-sm" id="jrNext" ${res.page >= pages ? 'disabled style="opacity:0.5;cursor:not-allowed;"' : ''}>Suivant <i class="fas fa-chevron-right"></i></button>
+        </div>`;
+      const prev = document.getElementById('jrPrev');
+      const next = document.getElementById('jrNext');
+      if (prev && res.page > 1) prev.addEventListener('click', () => { jrState.page--; jrChargerEvenements(); });
+      if (next && res.page < pages) next.addEventListener('click', () => { jrState.page++; jrChargerEvenements(); });
+    }
+  } catch (e) {
+    el.innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><p>Erreur de chargement : ' + esc(e.message) + '</p></div>';
+  }
+}
