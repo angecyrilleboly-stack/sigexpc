@@ -91,7 +91,7 @@ async function getBordereauData(idExamen, idReg, isRajout) {
      FROM inscriptions_examens ins
      JOIN candidats c ON ins.id_candidat = c.id
      JOIN auto_ecoles ae ON c.id_autoecole = ae.id
-     WHERE ins.id_examen = ? AND ins.resultat = 'Validé'`, [idExamen]
+     WHERE ins.id_examen = ? AND ins.resultat IN ('Validé', 'En attente (Rajout)')`, [idExamen]
   );
   let candidats = rows.filter(r => {
     if (String(r.resultat) === 'En attente (Rajout)') return isRajout;
