@@ -351,7 +351,10 @@ async function navTo(el, target) {
   }
 }
 
-// Ouvrir un document dans un nouvel onglet
+// Ouvrir un document dans un nouvel onglet ; si le navigateur bloque les
+// popups (aucun onglet créé), basculer dans l'onglet courant plutôt que
+// de laisser l'utilisateur sans réaction.
 function openDocument(path) {
-  window.open(path, '_blank');
+  const w = window.open(path, '_blank');
+  if (!w) window.location.href = path;
 }
